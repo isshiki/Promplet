@@ -1,6 +1,8 @@
 using System.Media;
+using System.IO;
 using System.Windows;
 using System.Windows.Input;
+using System.ComponentModel;
 using Promplet.Models;
 using Promplet.Services;
 using Promplet.ViewModels;
@@ -11,9 +13,11 @@ namespace Promplet;
 public partial class MainWindow : Window
 {
     private readonly ClipboardPasteService _clipboardPasteService = new();
-    private readonly PromptDocument _promptDocument;
+    private PromptDocument _promptDocument;
     private readonly PromptStore _promptStore;
     private readonly PaletteViewModel _paletteViewModel;
+    private readonly TrayIconService _trayIconService;
+    private bool _isExiting;
 
     public MainWindow()
         : this(new PromptStore())
@@ -31,7 +35,9 @@ public partial class MainWindow : Window
         DataContext = _paletteViewModel;
         ApplySavedWindowState(_promptDocument.Window);
         DragHandle.MouseLeftButtonDown += DragHandle_MouseLeftButtonDown;
-        Closing += (_, _) => SaveWindowState();
+        _trayIconService = new TrayIconService(GetTrayIconPath(), ShowPalette, HidePalette, ReloadPrompts, ExitApplication);
+        Closing += MainWindow_Closing;
+        Closed += (_, _) => _trayIconService.Dispose();
     }
 
     private void DragHandle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -79,7 +85,61 @@ public partial class MainWindow : Window
 
     private void CloseButton_Click(object sender, RoutedEventArgs e)
     {
-        Application.Current.Shutdown();
+        HidePalette();
+    }
+
+    private void MainWindow_Closing(object? sender, CancelEventArgs e)
+    {
+        if (_isExiting)
+        {
+            SaveWindowState();
+            return;
+        }
+
+        e.Cancel = true;
+        HidePalette();
+    }
+
+    private void ShowPalette()
+    {
+        if (!IsVisible)
+        {
+            Show();
+        }
+
+        if (WindowState == WindowState.Minimized)
+        {
+            WindowState = WindowState.Normal;
+        }
+
+        Topmost = true;
+    }
+
+    private void HidePalette()
+    {
+        SaveWindowState();
+        Hide();
+    }
+
+    private void ReloadPrompts()
+    {
+        try
+        {
+            _promptDocument = _promptStore.LoadOrCreate();
+            _paletteViewModel.LoadDocument(_promptDocument);
+        }
+        catch
+        {
+            SystemSounds.Beep.Play();
+        }
+    }
+
+    private void ExitApplication()
+    {
+        _isExiting = true;
+        SaveWindowState();
+        _trayIconService.Dispose();
+        System.Windows.Application.Current.Shutdown();
     }
 
     private void ApplySavedWindowState(PromptWindowState state)
@@ -115,5 +175,10 @@ public partial class MainWindow : Window
         };
 
         _promptStore.Save(_promptDocument);
+    }
+
+    private static string GetTrayIconPath()
+    {
+        return Path.Combine(AppContext.BaseDirectory, "Assets", "promplet_icon.ico");
     }
 }

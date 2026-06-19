@@ -142,7 +142,7 @@
                                 Content="X"
                                 FontSize="12"
                                 Foreground="#A5ADBA"
-                                ToolTip="Exit Promplet"
+                                ToolTip="Hide Promplet"
                                 Style="{StaticResource FlatChromeButtonStyle}"
                                 shell:WindowChrome.IsHitTestVisibleInChrome="True"
                                 Click="CloseButton_Click" />

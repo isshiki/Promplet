@@ -28,7 +28,11 @@ internal static class Program
             ("prompt store backs up invalid JSON and recreates defaults", PromptStoreBacksUpInvalidJson),
             ("prompt store backs up invalid JSON shape and recreates defaults", PromptStoreBacksUpInvalidJsonShape),
             ("palette view model switches visible prompt groups", PaletteViewModelSwitchesVisiblePromptGroups),
+            ("palette view model reloads groups from a new prompt document", PaletteViewModelReloadsPromptDocument),
             ("palette window state clamps saved placement", PaletteWindowStateClampsSavedPlacement),
+            ("icon assets are packaged for Windows shell and tray use", IconAssetsArePackaged),
+            ("project uses Promplet icon and Windows Forms tray support", ProjectUsesIconAndWindowsForms),
+            ("tray service exposes resident app commands", TrayServiceExposesResidentAppCommands),
             ("SendInput uses the native Windows INPUT struct size", SendInputStructUsesNativeSize),
             ("main window uses the approved vertical palette contract", MainWindowUsesApprovedVerticalPaletteContract)
         };
@@ -183,6 +187,56 @@ internal static class Program
         AssertTrue(!viewModel.Groups.Single(group => group.Id == "ai-chat").IsSelected, "previous tab should be unselected");
     }
 
+    private static void PaletteViewModelReloadsPromptDocument()
+    {
+        var viewModel = new PaletteViewModel(new PromptDocument
+        {
+            App = new PromptAppSettings
+            {
+                SelectedGroupId = "old"
+            },
+            Groups =
+            [
+                new PromptGroup
+                {
+                    Id = "old",
+                    Name = "Old",
+                    Buttons =
+                    [
+                        new PromptButton("old-button", "古い", "old prompt")
+                    ]
+                }
+            ]
+        });
+
+        var reloaded = new PromptDocument
+        {
+            App = new PromptAppSettings
+            {
+                SelectedGroupId = "mail"
+            },
+            Groups =
+            [
+                new PromptGroup
+                {
+                    Id = "mail",
+                    Name = "Mail",
+                    Buttons =
+                    [
+                        new PromptButton("reply", "返信", "mail prompt")
+                    ]
+                }
+            ]
+        };
+
+        viewModel.LoadDocument(reloaded);
+
+        AssertEqual(1, viewModel.Groups.Count, "reloaded group count");
+        AssertEqual("mail", viewModel.SelectedGroup?.Id, "reloaded selected group");
+        AssertEqual("返信", viewModel.VisibleButtons.Single().Label, "reloaded visible button");
+        AssertEqual("mail", reloaded.App.SelectedGroupId, "reloaded document keeps selected group");
+    }
+
     private static void PaletteWindowStateClampsSavedPlacement()
     {
         var offScreen = PaletteWindowState.Normalize(
@@ -218,6 +272,50 @@ internal static class Program
         AssertEqual(500d, visible.Width, "visible width should be retained");
     }
 
+    private static void IconAssetsArePackaged()
+    {
+        var svgPath = FindRepositoryFile("Promplet", "Assets", "promplet_icon.svg");
+        var pngPath = FindRepositoryFile("Promplet", "Assets", "promplet_icon.png");
+        var icoPath = FindRepositoryFile("Promplet", "Assets", "promplet_icon.ico");
+
+        AssertTrue(new FileInfo(svgPath).Length > 500, "SVG icon asset should not be empty");
+        AssertTrue(new FileInfo(pngPath).Length > 1000, "PNG icon asset should not be empty");
+
+        var icoBytes = File.ReadAllBytes(icoPath);
+        AssertTrue(icoBytes.Length > 1000, "ICO icon asset should not be empty");
+        AssertEqual((byte)0x00, icoBytes[0], "ICO reserved byte 0");
+        AssertEqual((byte)0x00, icoBytes[1], "ICO reserved byte 1");
+        AssertEqual((byte)0x01, icoBytes[2], "ICO image type low byte");
+        AssertEqual((byte)0x00, icoBytes[3], "ICO image type high byte");
+        AssertTrue(BitConverter.ToUInt16(icoBytes, 4) >= 1, "ICO should contain at least one image");
+    }
+
+    private static void ProjectUsesIconAndWindowsForms()
+    {
+        var project = XDocument.Load(FindRepositoryFile("Promplet", "Promplet.csproj"));
+        var properties = project.Root?.Elements("PropertyGroup").Elements().ToDictionary(element => element.Name.LocalName, element => element.Value)
+            ?? throw new InvalidOperationException("Promplet.csproj has no properties.");
+
+        AssertEqual("true", properties["UseWindowsForms"], "WinForms support for NotifyIcon");
+        AssertEqual(@"Assets\promplet_icon.ico", properties["ApplicationIcon"], "application icon path");
+
+        var iconContent = project.Descendants("Content")
+            .SingleOrDefault(element => AttributeValueOrDefault(element, "Include") == @"Assets\promplet_icon.ico")
+            ?? throw new InvalidOperationException("promplet_icon.ico should be copied to the build output for NotifyIcon.");
+        AssertEqual("PreserveNewest", iconContent.Elements("CopyToOutputDirectory").Single().Value, "tray icon copy behavior");
+    }
+
+    private static void TrayServiceExposesResidentAppCommands()
+    {
+        var source = File.ReadAllText(FindRepositoryFile("Promplet", "Services", "TrayIconService.cs"), Encoding.UTF8);
+
+        AssertTrue(source.Contains("Show Promplet", StringComparison.Ordinal), "tray menu should show the palette");
+        AssertTrue(source.Contains("Hide Promplet", StringComparison.Ordinal), "tray menu should hide the palette");
+        AssertTrue(source.Contains("Reload prompts", StringComparison.Ordinal), "tray menu should reload JSON prompts");
+        AssertTrue(source.Contains("Exit", StringComparison.Ordinal), "tray menu should explicitly exit");
+        AssertTrue(source.Contains("Dispose()", StringComparison.Ordinal), "tray icon should be disposable");
+    }
+
     private static void MainWindowUsesApprovedVerticalPaletteContract()
     {
         var xaml = XDocument.Load(FindRepositoryFile("Promplet", "MainWindow.xaml"));
@@ -245,7 +343,14 @@ internal static class Program
             ?? throw new InvalidOperationException("Could not find GroupTabs ItemsControl.");
         AssertEqual("{Binding Groups}", AttributeValue(groupTabs, "ItemsSource"), "group tabs binding");
         AssertTrue(!xaml.Descendants(wpf + "TextBlock").Any(element => StaticGroupNames.Contains(AttributeValueOrDefault(element, "Text"))), "static group tab labels should not remain in XAML");
-        AssertTrue(xaml.Descendants(wpf + "Button").Any(element => AttributeValue(element, x + "Name") == "CloseButton"), "palette has close button");
+        var closeButton = xaml.Descendants(wpf + "Button")
+            .SingleOrDefault(element => AttributeValueOrDefault(element, x + "Name") == "CloseButton")
+            ?? throw new InvalidOperationException("Palette should have a close button.");
+        AssertEqual("Hide Promplet", AttributeValue(closeButton, "ToolTip"), "close button should hide the palette");
+
+        var mainWindowSource = File.ReadAllText(FindRepositoryFile("Promplet", "MainWindow.xaml.cs"), Encoding.UTF8);
+        AssertTrue(mainWindowSource.Contains("HidePalette();", StringComparison.Ordinal), "close button should call HidePalette");
+        AssertTrue(mainWindowSource.Contains("ExitApplication", StringComparison.Ordinal), "explicit tray exit should remain available");
     }
 
     private static string FindRepositoryFile(params string[] segments)
@@ -280,6 +385,11 @@ internal static class Program
     }
 
     private static string? AttributeValueOrDefault(XElement element, string name)
+    {
+        return element.Attribute(name)?.Value;
+    }
+
+    private static string? AttributeValueOrDefault(XElement element, XName name)
     {
         return element.Attribute(name)?.Value;
     }

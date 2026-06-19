@@ -1,4 +1,5 @@
 using System.Windows;
+using Clipboard = System.Windows.Clipboard;
 
 namespace Promplet.Services;
 

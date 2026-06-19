@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" role="img" aria-label="Promplet app icon">
+  <defs>
+    <style>
+      .frame { fill: #FFFFFF; stroke: #D7DDE2; stroke-width: 10; }
+      .accent { fill: none; stroke: #1EA7D8; stroke-width: 21; stroke-linecap: round; stroke-linejoin: round; }
+      .line { fill: none; stroke: #C9D0D6; stroke-width: 21; stroke-linecap: round; }
+    </style>
+  </defs>
+
+  <!-- Rounded app tile; outside remains transparent -->
+  <rect class="frame" x="20" y="28" width="216" height="200" rx="34" ry="34"/>
+
+  <!-- Top row: prompt chevron + inserted prompt line, arranged like a wink -->
+  <path class="accent" d="M68 66 L96 94 L68 122"/>
+  <line class="accent" x1="132" y1="94" x2="188" y2="94"/>
+
+  <!-- Prompt list lines below, spanning almost full content width -->
+  <line class="line" x1="58" y1="152" x2="198" y2="152"/>
+  <line class="line" x1="58" y1="178" x2="198" y2="178"/>
+  <line class="line" x1="58" y1="204" x2="198" y2="204"/>
+</svg>

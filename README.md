@@ -4,9 +4,9 @@ Promplet is a small Windows desktop prompt and snippet palette for quickly pasti
 
 ## Status
 
-Early development. The current build is a Phase 2 MVP: a topmost WPF palette that does not steal focus and can paste JSON-backed prompt groups into the active application.
+Early development. The current build is a Phase 3 MVP: a tray-resident WPF palette that does not steal focus and can paste JSON-backed prompt groups into the active application.
 
-The app is not tray-resident yet. Use the `X` button on the palette to exit the MVP build.
+Use the `X` button on the palette to hide it. Use the tray icon menu to show, hide, reload prompt JSON, or exit Promplet.
 
 Prompt data is stored at `%APPDATA%\Promplet\prompts.json`. If the file is missing, Promplet creates it from the default prompts. If it is invalid, Promplet backs it up and recreates defaults.
 
@@ -26,6 +26,7 @@ dotnet build .\Promplet.slnx
 
 1. Non-activating topmost palette
 2. JSON-backed prompt groups
-3. Tray resident mode and global hotkey
-4. Paste mode and newline handling options
-5. Button manager UI
+3. Tray resident mode
+4. Global hotkey
+5. Paste mode and newline handling options
+6. Button manager UI

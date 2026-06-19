@@ -8,14 +8,13 @@ namespace Promplet.ViewModels;
 
 public sealed class PaletteViewModel : INotifyPropertyChanged
 {
-    private readonly PromptDocument _document;
+    private PromptDocument _document;
     private PaletteGroupViewModel? _selectedGroup;
 
     public PaletteViewModel(PromptDocument document)
     {
         _document = document;
-        Groups = new ObservableCollection<PaletteGroupViewModel>(
-            document.Groups.Select(group => new PaletteGroupViewModel(group)));
+        Groups = [];
         VisibleButtons = [];
         SelectGroupCommand = new RelayCommand(parameter =>
         {
@@ -25,13 +24,7 @@ public sealed class PaletteViewModel : INotifyPropertyChanged
             }
         });
 
-        var initialGroup = Groups.FirstOrDefault(group => group.Id == document.App.SelectedGroupId)
-            ?? Groups.FirstOrDefault();
-
-        if (initialGroup is not null)
-        {
-            SelectGroup(initialGroup);
-        }
+        LoadDocument(document);
     }
 
     public event PropertyChangedEventHandler? PropertyChanged;
@@ -54,6 +47,30 @@ public sealed class PaletteViewModel : INotifyPropertyChanged
 
             _selectedGroup = value;
             OnPropertyChanged(nameof(SelectedGroup));
+        }
+    }
+
+    public void LoadDocument(PromptDocument document)
+    {
+        _document = document;
+        Groups.Clear();
+        VisibleButtons.Clear();
+
+        foreach (var group in document.Groups.Select(group => new PaletteGroupViewModel(group)))
+        {
+            Groups.Add(group);
+        }
+
+        var initialGroup = Groups.FirstOrDefault(group => group.Id == document.App.SelectedGroupId)
+            ?? Groups.FirstOrDefault();
+
+        if (initialGroup is not null)
+        {
+            SelectGroup(initialGroup);
+        }
+        else
+        {
+            SelectedGroup = null;
         }
     }
 

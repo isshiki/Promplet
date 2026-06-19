@@ -25,7 +25,8 @@ The core manual checks are:
 3. The selected prompt text is pasted into ChatGPT, Claude, Notepad, and Windows Terminal.
 4. The palette can be dragged without losing topmost/no-activate behavior.
 5. Switching a group tab changes the visible prompt buttons.
-6. The `X` button exits the app.
+6. The `X` button hides the palette without ending the process.
+7. The tray icon menu can show the palette, hide it, reload prompt JSON, and exit.
 
 Prompt data is loaded from `%APPDATA%\Promplet\prompts.json`. Delete that file to regenerate the default MVP prompt group.
 
@@ -33,6 +34,5 @@ Prompt data is loaded from `%APPDATA%\Promplet\prompts.json`. Delete that file t
 
 - Prompt groups and buttons are JSON-backed, but there is no editor UI yet.
 - Only text clipboard restore is attempted.
-- Tray, hotkey, advanced paste settings, and manager UI are deferred.
-- The current MVP exits from the palette `X` button instead of hiding to a tray icon.
+- Hotkey, advanced paste settings, and manager UI are deferred.
 - Full no-activate paste behavior must be tested manually against target applications.
