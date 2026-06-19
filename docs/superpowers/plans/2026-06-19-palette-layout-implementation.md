@@ -53,6 +53,6 @@
 ## Self-Review
 
 - Spec coverage: Implements the main palette portion of `docs/superpowers/specs/2026-06-19-palette-layout-design.md`.
-- Deferred intentionally: button manager UI, JSON persistence, tray behavior, global hotkeys, and real group switching.
+- Deferred intentionally: Prompt Library UI, JSON persistence, tray behavior, global hotkeys, and real group switching.
 - Placeholder scan: no placeholders remain.
 - Type consistency: uses existing `PromptButton`, `PromptCatalog`, and `MainWindow` names.

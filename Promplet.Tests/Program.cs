@@ -27,6 +27,8 @@ internal static class Program
             ("prompt store creates the default JSON file", PromptStoreCreatesDefaultJsonFile),
             ("prompt store normalizes appearance and hotkey settings", PromptStoreNormalizesAppearanceAndHotKeySettings),
             ("prompt store migrates legacy shifted numpad defaults", PromptStoreMigratesLegacyShiftedNumPadDefaults),
+            ("prompt store keeps empty prompt library groups", PromptStoreKeepsEmptyPromptLibraryGroups),
+            ("prompt document clone isolates prompt library edits", PromptDocumentCloneIsolatesPromptLibraryEdits),
             ("prompt store backs up invalid JSON and recreates defaults", PromptStoreBacksUpInvalidJson),
             ("prompt store backs up invalid JSON shape and recreates defaults", PromptStoreBacksUpInvalidJsonShape),
             ("palette view model switches visible prompt groups", PaletteViewModelSwitchesVisiblePromptGroups),
@@ -39,6 +41,7 @@ internal static class Program
             ("global hotkey definitions can be built from user settings", GlobalHotKeyDefinitionsCanUseUserSettings),
             ("global hotkey service records registration failures", GlobalHotKeyServiceRecordsRegistrationFailures),
             ("settings dialog exposes appearance and hotkey controls", SettingsDialogExposesAppearanceAndHotkeyControls),
+            ("prompt library exposes group and prompt editing controls", PromptLibraryExposesGroupAndPromptEditingControls),
             ("global hotkey service exposes Win32 registration contract", GlobalHotKeyServiceExposesWin32RegistrationContract),
             ("main window wires global hotkey actions", MainWindowWiresGlobalHotKeyActions),
             ("SendInput uses the native Windows INPUT struct size", SendInputStructUsesNativeSize),
@@ -174,6 +177,46 @@ internal static class Program
             AssertTrue(!gesture.Alt, "migrated paste hotkey should not add Alt");
             AssertTrue(!gesture.Windows, "migrated paste hotkey should not add Win");
         }
+    }
+
+    private static void PromptStoreKeepsEmptyPromptLibraryGroups()
+    {
+        using var temp = TemporaryDirectory.Create();
+        var document = PromptCatalog.CreateDefaultDocument();
+        document.Groups.Add(new PromptGroup
+        {
+            Id = "empty",
+            Name = "Empty",
+            Buttons = []
+        });
+
+        var store = new PromptStore(temp.Path);
+        store.Save(document);
+        var reloaded = store.LoadOrCreate();
+
+        AssertTrue(reloaded.Groups.Any(group => group.Id == "empty"), "empty prompt library group should be preserved");
+    }
+
+    private static void PromptDocumentCloneIsolatesPromptLibraryEdits()
+    {
+        var original = PromptCatalog.CreateDefaultDocument();
+        var clone = original.Clone();
+
+        clone.App.SelectedGroupId = "changed";
+        clone.Window.Width = 900;
+        clone.Groups[0].Name = "Changed";
+        clone.Groups[0].Buttons[0] = clone.Groups[0].Buttons[0] with
+        {
+            Label = "変更",
+            Text = "changed prompt"
+        };
+
+        AssertEqual("ai-chat", original.App.SelectedGroupId, "original selected group should not change");
+        AssertEqual(620d, original.Window.Width, "original window width should not change");
+        AssertEqual("AI Chat", original.Groups[0].Name, "original group name should not change");
+        AssertEqual("要約", original.Groups[0].Buttons[0].Label, "original prompt label should not change");
+        AssertEqual("changed", clone.App.SelectedGroupId, "clone selected group should change");
+        AssertEqual("Changed", clone.Groups[0].Name, "clone group name should change");
     }
 
     private static void PromptStoreBacksUpInvalidJson()
@@ -500,6 +543,29 @@ internal static class Program
         AssertTrue(source.Contains("DialogResult = false", StringComparison.Ordinal), "settings dialog should cancel changes");
     }
 
+    private static void PromptLibraryExposesGroupAndPromptEditingControls()
+    {
+        var xaml = XDocument.Load(FindRepositoryFile("Promplet", "PromptLibraryWindow.xaml"));
+        var source = File.ReadAllText(FindRepositoryFile("Promplet", "PromptLibraryWindow.xaml.cs"), Encoding.UTF8);
+        XNamespace wpf = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+        XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
+
+        AssertEqual("Prompt Library", AttributeValue(xaml.Root!, "Title"), "prompt library title");
+        AssertTrue(xaml.Descendants(wpf + "ListBox").Any(element => AttributeValueOrDefault(element, x + "Name") == "GroupListBox"), "prompt library should list groups");
+        AssertTrue(xaml.Descendants(wpf + "ListBox").Any(element => AttributeValueOrDefault(element, x + "Name") == "PromptListBox"), "prompt library should list prompts");
+        AssertTrue(xaml.Descendants(wpf + "TextBox").Any(element => AttributeValueOrDefault(element, x + "Name") == "GroupNameTextBox"), "prompt library should edit group name");
+        AssertTrue(xaml.Descendants(wpf + "TextBox").Any(element => AttributeValueOrDefault(element, x + "Name") == "PromptNameTextBox"), "prompt library should edit prompt name");
+        AssertTrue(xaml.Descendants(wpf + "TextBox").Any(element => AttributeValueOrDefault(element, x + "Name") == "PromptTextTextBox"), "prompt library should edit prompt text");
+        AssertTrue(xaml.Descendants(wpf + "CheckBox").Any(element => AttributeValueOrDefault(element, x + "Name") == "PromptEnabledCheckBox"), "prompt library should edit prompt enabled state");
+        AssertTrue(source.Contains("AddGroup", StringComparison.Ordinal), "prompt library should add groups");
+        AssertTrue(source.Contains("AddPrompt", StringComparison.Ordinal), "prompt library should add prompts");
+        AssertTrue(source.Contains("DeleteGroup", StringComparison.Ordinal), "prompt library should delete groups");
+        AssertTrue(source.Contains("DeletePrompt", StringComparison.Ordinal), "prompt library should delete prompts");
+        AssertTrue(source.Contains("MovePrompt", StringComparison.Ordinal), "prompt library should reorder prompts");
+        AssertTrue(source.Contains("DialogResult = true", StringComparison.Ordinal), "prompt library should save with OK");
+        AssertTrue(source.Contains("DialogResult = false", StringComparison.Ordinal), "prompt library should cancel changes");
+    }
+
     private static void GlobalHotKeyServiceExposesWin32RegistrationContract()
     {
         var nativeSource = File.ReadAllText(FindRepositoryFile("Promplet", "Win32", "NativeMethods.cs"), Encoding.UTF8);
@@ -521,6 +587,7 @@ internal static class Program
 
         AssertTrue(source.Contains("GlobalHotKeyService", StringComparison.Ordinal), "MainWindow should own GlobalHotKeyService");
         AssertTrue(source.Contains("HotKeyPressed", StringComparison.Ordinal), "MainWindow should subscribe to hotkey events");
+        AssertTrue(source.Contains("OpenPromptLibrary", StringComparison.Ordinal), "MainWindow should open Prompt Library from the tray");
         AssertTrue(source.Contains("TogglePalette", StringComparison.Ordinal), "MainWindow should handle toggle hotkey");
         AssertTrue(source.Contains("PasteVisibleButtonByIndexAsync", StringComparison.Ordinal), "MainWindow should paste visible buttons by index");
         AssertTrue(source.Contains("PastePromptAsync", StringComparison.Ordinal), "MainWindow should share prompt paste behavior");

@@ -38,7 +38,7 @@ public partial class MainWindow : Window
         ApplyAppearanceSettings();
         ApplySavedWindowState(_promptDocument.Window);
         DragHandle.MouseLeftButtonDown += DragHandle_MouseLeftButtonDown;
-        _trayIconService = new TrayIconService(GetTrayIconPath(), TogglePalette, OpenSettings, ReloadPrompts, ExitApplication);
+        _trayIconService = new TrayIconService(GetTrayIconPath(), TogglePalette, OpenPromptLibrary, OpenSettings, ReloadPrompts, ExitApplication);
         _globalHotKeyService = new GlobalHotKeyService(this, GlobalHotKeyDefinitions.Create(_promptDocument.App.HotKeys));
         _globalHotKeyService.HotKeyPressed += GlobalHotKeyService_HotKeyPressed;
         Closing += MainWindow_Closing;
@@ -184,6 +184,23 @@ public partial class MainWindow : Window
         {
             SystemSounds.Beep.Play();
         }
+    }
+
+    private void OpenPromptLibrary()
+    {
+        var dialog = new PromptLibraryWindow(_promptDocument);
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        _promptDocument = dialog.Document;
+        _promptStore.Save(_promptDocument);
+        _promptDocument = _promptStore.LoadOrCreate();
+        _paletteViewModel.LoadDocument(_promptDocument);
+        ApplyAppearanceSettings();
+        _globalHotKeyService.ApplyHotKeys(GlobalHotKeyDefinitions.Create(_promptDocument.App.HotKeys));
     }
 
     private void OpenSettings()

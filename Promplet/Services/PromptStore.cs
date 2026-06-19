@@ -97,7 +97,6 @@ public sealed class PromptStore
                     })
                     .ToList()
             })
-            .Where(group => group.Buttons.Count > 0)
             .ToList();
 
         if (groups.Count == 0)

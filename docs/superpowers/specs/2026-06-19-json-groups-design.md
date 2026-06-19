@@ -8,7 +8,7 @@ Approved for implementation on 2026-06-19 by the user instruction to proceed wit
 
 This pass replaces the fixed in-code prompt list with a JSON-backed prompt library and connects the main palette tabs to real groups. It also persists lightweight palette state needed for daily use: selected group, window position, and width.
 
-Tray residence, global hotkeys, the button manager UI, per-button paste modes, and advanced newline rules remain out of scope for this pass.
+Tray residence, global hotkeys, the Prompt Library UI, per-button paste modes, and advanced newline rules remain out of scope for this pass.
 
 ## Storage
 

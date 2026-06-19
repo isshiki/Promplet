@@ -6,7 +6,7 @@ Fixed on 2026-06-19 from the visual mockup direction `A案 v8`.
 
 ## Scope
 
-This design covers the main Promplet palette layout and the near-term direction for the future button manager. It does not implement JSON persistence, tray behavior, global hotkeys, or the full manager UI yet.
+This design covers the main Promplet palette layout and the near-term direction for the future Prompt Library. It does not implement JSON persistence, tray behavior, global hotkeys, or the full manager UI yet.
 
 ## Main Palette
 
@@ -37,7 +37,7 @@ User-facing prompt buttons show only the prompt name and a faint preview of the 
 - Left click pastes the prompt.
 - Right click copies the prompt without pasting.
 
-## Button Manager Direction
+## Prompt Library Direction
 
 The manager should feel close to a bookmark manager.
 

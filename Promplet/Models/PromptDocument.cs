@@ -7,6 +7,16 @@ public sealed class PromptDocument
     public PromptWindowState Window { get; set; } = new();
 
     public List<PromptGroup> Groups { get; set; } = [];
+
+    public PromptDocument Clone()
+    {
+        return new PromptDocument
+        {
+            App = App.Clone(),
+            Window = Window.Clone(),
+            Groups = Groups.Select(group => group.Clone()).ToList()
+        };
+    }
 }
 
 public sealed class PromptAppSettings
@@ -48,6 +58,16 @@ public sealed class PromptWindowState
     public double? Top { get; set; }
 
     public double Width { get; set; } = 620;
+
+    public PromptWindowState Clone()
+    {
+        return new PromptWindowState
+        {
+            Left = Left,
+            Top = Top,
+            Width = Width
+        };
+    }
 }
 
 public sealed class PromptGroup
@@ -57,4 +77,14 @@ public sealed class PromptGroup
     public string Name { get; set; } = string.Empty;
 
     public List<PromptButton> Buttons { get; set; } = [];
+
+    public PromptGroup Clone()
+    {
+        return new PromptGroup
+        {
+            Id = Id,
+            Name = Name,
+            Buttons = Buttons.ToList()
+        };
+    }
 }
