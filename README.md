@@ -15,6 +15,20 @@ The palette is designed to stay out of the way:
 - The tray icon menu is the main place for settings, Prompt Library, reload, and exit.
 - Only one Promplet instance can run at a time. Starting Promplet again while it is already running exits the second process before it creates another tray icon or hotkey registration.
 
+## Screenshots
+
+Main palette:
+
+![Promplet palette](screenshots/palette.png)
+
+Prompt Library:
+
+![Prompt Library](screenshots/prompt-library.png)
+
+Settings:
+
+![Promplet Settings](screenshots/settings.png)
+
 ## Install
 
 There is no installer in v1.0. Put `Promplet.exe` in any folder and run it.
