@@ -3,10 +3,11 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         Title="Prompt Library"
         Width="920"
-        Height="640"
+        Height="660"
         MinWidth="760"
         MinHeight="520"
         WindowStyle="None"
+        ResizeMode="NoResize"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource PrompletDialogBackgroundBrush}">
     <Window.Resources>
@@ -112,14 +113,16 @@
                             <TextBox x:Name="GroupNameTextBox"
                                      ToolTip="Group name"
                                      TextChanged="GroupNameTextBox_TextChanged" />
-                            <StackPanel Orientation="Horizontal"
-                                        Margin="0,10,0,0">
-                                <Button Content="Add"
-                                        Margin="0,0,6,0"
-                                        Click="AddGroup_Click" />
-                                <Button Content="Delete"
-                                        Click="DeleteGroup_Click" />
-                            </StackPanel>
+                        </StackPanel>
+                        <StackPanel x:Name="GroupActionsPanel"
+                                    DockPanel.Dock="Bottom"
+                                    Orientation="Horizontal"
+                                    Margin="0,10,0,0">
+                            <Button Content="Add"
+                                    Margin="0,0,6,0"
+                                    Click="AddGroup_Click" />
+                            <Button Content="Delete"
+                                    Click="DeleteGroup_Click" />
                         </StackPanel>
                         <ListBox x:Name="GroupListBox"
                                  SelectionChanged="GroupListBox_SelectionChanged">
@@ -142,15 +145,15 @@
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
+                            <RowDefinition Height="10" />
                             <RowDefinition Height="*" />
                             <RowDefinition Height="14" />
-                            <RowDefinition Height="220" />
+                            <RowDefinition Height="150" />
                         </Grid.RowDefinitions>
 
-                        <DockPanel Grid.Row="0"
-                                   Margin="0,0,0,10">
-                            <StackPanel DockPanel.Dock="Right"
-                                        Orientation="Horizontal">
+                        <DockPanel Grid.Row="0">
+                            <StackPanel Orientation="Horizontal"
+                                        DockPanel.Dock="Right">
                                 <Button Content="Add"
                                         Margin="0,0,6,0"
                                         Click="AddPrompt_Click" />
@@ -170,14 +173,23 @@
                         </DockPanel>
 
                         <ListBox x:Name="PromptListBox"
-                                 Grid.Row="1"
+                                 Grid.Row="2"
+                                 MinHeight="340"
                                  SelectionChanged="PromptListBox_SelectionChanged">
+                            <ListBox.ItemContainerStyle>
+                                <Style TargetType="ListBoxItem">
+                                    <Setter Property="Height" Value="72" />
+                                    <Setter Property="Padding" Value="10,7" />
+                                    <Setter Property="Foreground" Value="{DynamicResource PrompletTextPrimaryBrush}" />
+                                    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                </Style>
+                            </ListBox.ItemContainerStyle>
                             <ListBox.ItemTemplate>
                                 <DataTemplate>
-                                    <Grid>
+                                    <Grid ClipToBounds="True">
                                         <Grid.RowDefinitions>
                                             <RowDefinition Height="Auto" />
-                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="*" />
                                         </Grid.RowDefinitions>
                                         <TextBlock Text="{Binding Label}"
                                                    FontWeight="SemiBold"
@@ -186,13 +198,19 @@
                                                    Text="{Binding Text}"
                                                    Foreground="{DynamicResource PrompletTextSecondaryBrush}"
                                                    FontSize="12"
-                                                   TextTrimming="CharacterEllipsis" />
+                                                   LineHeight="16"
+                                                   MaxHeight="38"
+                                                   TextWrapping="Wrap"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   ClipToBounds="True" />
                                     </Grid>
                                 </DataTemplate>
                             </ListBox.ItemTemplate>
                         </ListBox>
 
-                        <Grid Grid.Row="3">
+                        <Grid x:Name="PromptDetailGrid"
+                              Grid.Row="4"
+                              Height="150">
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="10" />

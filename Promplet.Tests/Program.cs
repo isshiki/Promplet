@@ -546,17 +546,24 @@ internal static class Program
     private static void PromptLibraryExposesGroupAndPromptEditingControls()
     {
         var xaml = XDocument.Load(FindRepositoryFile("Promplet", "PromptLibraryWindow.xaml"));
+        var xamlSource = File.ReadAllText(FindRepositoryFile("Promplet", "PromptLibraryWindow.xaml"), Encoding.UTF8);
         var source = File.ReadAllText(FindRepositoryFile("Promplet", "PromptLibraryWindow.xaml.cs"), Encoding.UTF8);
         XNamespace wpf = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
         XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
 
         AssertEqual("Prompt Library", AttributeValue(xaml.Root!, "Title"), "prompt library title");
+        AssertEqual("NoResize", AttributeValue(xaml.Root!, "ResizeMode"), "prompt library should avoid the system resize border");
         AssertTrue(xaml.Descendants(wpf + "ListBox").Any(element => AttributeValueOrDefault(element, x + "Name") == "GroupListBox"), "prompt library should list groups");
         AssertTrue(xaml.Descendants(wpf + "ListBox").Any(element => AttributeValueOrDefault(element, x + "Name") == "PromptListBox"), "prompt library should list prompts");
         AssertTrue(xaml.Descendants(wpf + "TextBox").Any(element => AttributeValueOrDefault(element, x + "Name") == "GroupNameTextBox"), "prompt library should edit group name");
         AssertTrue(xaml.Descendants(wpf + "TextBox").Any(element => AttributeValueOrDefault(element, x + "Name") == "PromptNameTextBox"), "prompt library should edit prompt name");
         AssertTrue(xaml.Descendants(wpf + "TextBox").Any(element => AttributeValueOrDefault(element, x + "Name") == "PromptTextTextBox"), "prompt library should edit prompt text");
         AssertTrue(xaml.Descendants(wpf + "CheckBox").Any(element => AttributeValueOrDefault(element, x + "Name") == "PromptEnabledCheckBox"), "prompt library should edit prompt enabled state");
+        AssertEqual("660", AttributeValue(xaml.Root!, "Height"), "prompt library should give the lists more vertical room");
+        AssertTrue(xaml.Descendants(wpf + "ListBox").Any(element => AttributeValueOrDefault(element, x + "Name") == "PromptListBox" && AttributeValueOrDefault(element, "MinHeight") == "340"), "prompt list should have more vertical room");
+        AssertTrue(xaml.Descendants(wpf + "StackPanel").Any(element => AttributeValueOrDefault(element, x + "Name") == "GroupActionsPanel" && AttributeValueOrDefault(element, "DockPanel.Dock") == "Bottom"), "group actions should sit below the group list");
+        AssertTrue(xaml.Descendants(wpf + "Grid").Any(element => AttributeValueOrDefault(element, x + "Name") == "PromptDetailGrid" && AttributeValueOrDefault(element, "Height") == "150"), "prompt detail editor should be shorter than the list");
+        AssertTrue(xamlSource.Contains("<Setter Property=\"Height\" Value=\"72\" />", StringComparison.Ordinal), "prompt rows should have fixed height");
         AssertTrue(source.Contains("AddGroup", StringComparison.Ordinal), "prompt library should add groups");
         AssertTrue(source.Contains("AddPrompt", StringComparison.Ordinal), "prompt library should add prompts");
         AssertTrue(source.Contains("DeleteGroup", StringComparison.Ordinal), "prompt library should delete groups");
