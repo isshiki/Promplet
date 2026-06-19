@@ -4,6 +4,31 @@ namespace Promplet.Services;
 
 public static class PromptCatalog
 {
+    public static PromptDocument CreateDefaultDocument()
+    {
+        return new PromptDocument
+        {
+            App = new PromptAppSettings
+            {
+                RestoreClipboard = true,
+                SelectedGroupId = "ai-chat"
+            },
+            Window = new PromptWindowState
+            {
+                Width = 620
+            },
+            Groups =
+            [
+                new PromptGroup
+                {
+                    Id = "ai-chat",
+                    Name = "AI Chat",
+                    Buttons = GetDefaultButtons().ToList()
+                }
+            ]
+        };
+    }
+
     public static IReadOnlyList<PromptButton> GetDefaultButtons()
     {
         return

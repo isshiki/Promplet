@@ -78,6 +78,43 @@
                 </Setter.Value>
             </Setter>
         </Style>
+
+        <Style x:Key="GroupTabButtonStyle" TargetType="Button">
+            <Setter Property="Height" Value="32" />
+            <Setter Property="Margin" Value="0,0,2,0" />
+            <Setter Property="Padding" Value="13,0" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderBrush" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Foreground" Value="#778191" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="Normal" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="6,6,0,0">
+                            <ContentPresenter Margin="{TemplateBinding Padding}"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Center" />
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Foreground" Value="#374151" />
+                </Trigger>
+                <DataTrigger Binding="{Binding IsSelected}" Value="True">
+                    <Setter Property="Background" Value="#FFFFFF" />
+                    <Setter Property="Foreground" Value="#1F2937" />
+                    <Setter Property="FontWeight" Value="SemiBold" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
 
     <Border x:Name="PaletteRoot"
@@ -126,53 +163,32 @@
 
                         <ScrollViewer HorizontalScrollBarVisibility="Hidden"
                                       VerticalScrollBarVisibility="Disabled">
-                            <StackPanel Orientation="Horizontal">
-                                <Border Height="32"
-                                        Padding="13,0"
-                                        Background="#FFFFFF"
-                                        CornerRadius="6,6,0,0">
-                                    <TextBlock Text="AI Chat"
-                                               Foreground="#1F2937"
-                                               FontSize="12"
-                                               FontWeight="SemiBold"
-                                               VerticalAlignment="Center" />
-                                </Border>
-                                <TextBlock Text="CLI"
-                                           Foreground="#778191"
-                                           FontSize="12"
-                                           VerticalAlignment="Center"
-                                           Margin="13,0" />
-                                <TextBlock Text="Mail"
-                                           Foreground="#778191"
-                                           FontSize="12"
-                                           VerticalAlignment="Center"
-                                           Margin="13,0" />
-                                <TextBlock Text="Slack"
-                                           Foreground="#778191"
-                                           FontSize="12"
-                                           VerticalAlignment="Center"
-                                           Margin="13,0" />
-                                <TextBlock Text="Terminal"
-                                           Foreground="#778191"
-                                           FontSize="12"
-                                           VerticalAlignment="Center"
-                                           Margin="13,0" />
-                                <TextBlock Text="Dev"
-                                           Foreground="#778191"
-                                           FontSize="12"
-                                           VerticalAlignment="Center"
-                                           Margin="13,0" />
-                                <TextBlock Text="Edit"
-                                           Foreground="#778191"
-                                           FontSize="12"
-                                           VerticalAlignment="Center"
-                                           Margin="13,0" />
-                            </StackPanel>
+                            <ItemsControl x:Name="GroupTabs"
+                                          ItemsSource="{Binding Groups}">
+                                <ItemsControl.ItemsPanel>
+                                    <ItemsPanelTemplate>
+                                        <StackPanel Orientation="Horizontal" />
+                                    </ItemsPanelTemplate>
+                                </ItemsControl.ItemsPanel>
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Button Style="{StaticResource GroupTabButtonStyle}"
+                                                Command="{Binding DataContext.SelectGroupCommand, RelativeSource={RelativeSource AncestorType=ItemsControl}}"
+                                                CommandParameter="{Binding}"
+                                                shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                                            <TextBlock Text="{Binding Name}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       VerticalAlignment="Center" />
+                                        </Button>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
                         </ScrollViewer>
                     </DockPanel>
                 </Border>
 
                 <ItemsControl x:Name="PromptButtons"
+                              ItemsSource="{Binding VisibleButtons}"
                               Margin="18,16,18,10">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
