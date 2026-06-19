@@ -1,12 +1,47 @@
-﻿<Window x:Class="Promplet.MainWindow"
+<Window x:Class="Promplet.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:Promplet"
-        mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
-
-    </Grid>
+        Title="Promplet"
+        Width="520"
+        Height="56"
+        MinWidth="320"
+        ResizeMode="NoResize"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False">
+    <Border x:Name="PaletteRoot"
+            Background="#E62C313A"
+            BorderBrush="#664B5563"
+            BorderThickness="1"
+            CornerRadius="6"
+            Padding="6">
+        <DockPanel LastChildFill="True">
+            <TextBlock DockPanel.Dock="Left"
+                       Text="Promplet"
+                       Foreground="#F3F4F6"
+                       FontWeight="SemiBold"
+                       VerticalAlignment="Center"
+                       Margin="4,0,10,0" />
+            <ItemsControl x:Name="PromptButtons">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <StackPanel Orientation="Horizontal" />
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Button Content="{Binding Label}"
+                                MinWidth="72"
+                                Height="34"
+                                Margin="3,0"
+                                Padding="10,0"
+                                Click="PromptButton_Click"
+                                MouseRightButtonUp="PromptButton_RightClick" />
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </DockPanel>
+    </Border>
 </Window>
