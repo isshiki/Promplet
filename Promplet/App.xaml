@@ -1,8 +1,6 @@
 ﻿<Application x:Class="Promplet.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:Promplet"
-             StartupUri="MainWindow.xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <Application.Resources>
         <SolidColorBrush x:Key="PrompletPaletteOuterBackgroundBrush" Color="#F6F7F9" />
         <SolidColorBrush x:Key="PrompletPaletteOuterBorderBrush" Color="#D8DEE6" />

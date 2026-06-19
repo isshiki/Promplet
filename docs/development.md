@@ -32,6 +32,7 @@ The core manual checks are:
 10. The settings dialog can change theme mode, palette opacity, and hotkeys.
 11. The settings dialog shows hotkey registration failures if Windows rejects a shortcut.
 12. Prompt Library can add, delete, rename, enable/disable, and reorder prompts, then save or cancel changes.
+13. Starting Promplet again while it is already running exits the second process without creating another tray icon or exception dialog.
 
 Prompt data is loaded from `%APPDATA%\Promplet\prompts.json`. Delete that file to regenerate the default MVP prompt group.
 

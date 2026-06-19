@@ -31,6 +31,8 @@ internal static class Program
             ("prompt document clone isolates prompt library edits", PromptDocumentCloneIsolatesPromptLibraryEdits),
             ("prompt store backs up invalid JSON and recreates defaults", PromptStoreBacksUpInvalidJson),
             ("prompt store backs up invalid JSON shape and recreates defaults", PromptStoreBacksUpInvalidJsonShape),
+            ("application startup blocks multiple instances", ApplicationStartupBlocksMultipleInstances),
+            ("appearance service ignores missing WPF application", AppearanceServiceIgnoresMissingWpfApplication),
             ("palette view model switches visible prompt groups", PaletteViewModelSwitchesVisiblePromptGroups),
             ("palette view model reloads groups from a new prompt document", PaletteViewModelReloadsPromptDocument),
             ("palette window state clamps saved placement", PaletteWindowStateClampsSavedPlacement),
@@ -262,6 +264,25 @@ internal static class Program
         AssertEqual(1, document.Groups.Count, "invalid shape should recreate default group count");
         AssertEqual(4, document.Groups[0].Buttons.Count, "invalid shape should recreate default buttons");
         AssertTrue(Directory.GetFiles(temp.Path, "prompts.json.*.bak").Length == 1, "invalid shape should be backed up");
+    }
+
+    private static void ApplicationStartupBlocksMultipleInstances()
+    {
+        var appXaml = XDocument.Load(FindRepositoryFile("Promplet", "App.xaml"));
+        var appSource = File.ReadAllText(FindRepositoryFile("Promplet", "App.xaml.cs"), Encoding.UTF8);
+
+        AssertTrue(AttributeValueOrDefault(appXaml.Root!, "StartupUri") is null, "App.xaml should not create MainWindow before single-instance guard");
+        AssertTrue(appSource.Contains("SingleInstanceMutexName", StringComparison.Ordinal), "App should define a named single-instance mutex");
+        AssertTrue(appSource.Contains("new Mutex(", StringComparison.Ordinal), "App should acquire the named mutex during startup");
+        AssertTrue(appSource.Contains("createdNew", StringComparison.Ordinal), "App should check whether this is the first process");
+        AssertTrue(appSource.Contains("Shutdown();", StringComparison.Ordinal), "A second process should shut down before constructing MainWindow");
+        AssertTrue(appSource.Contains("new MainWindow().Show();", StringComparison.Ordinal), "The first process should create the palette after the guard");
+        AssertTrue(appSource.Contains("ReleaseMutex()", StringComparison.Ordinal), "App should release the single-instance mutex on exit");
+    }
+
+    private static void AppearanceServiceIgnoresMissingWpfApplication()
+    {
+        AppearanceService.Apply(PromptThemeModes.Light);
     }
 
     private static void PaletteViewModelSwitchesVisiblePromptGroups()

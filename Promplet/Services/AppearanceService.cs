@@ -66,6 +66,13 @@ public static class AppearanceService
 
     private static void SetBrush(string key, string color)
     {
-        WpfApplication.Current.Resources[key] = new WpfSolidColorBrush((WpfColor)WpfColorConverter.ConvertFromString(color));
+        var application = WpfApplication.Current;
+
+        if (application is null)
+        {
+            return;
+        }
+
+        application.Resources[key] = new WpfSolidColorBrush((WpfColor)WpfColorConverter.ConvertFromString(color));
     }
 }

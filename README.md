@@ -8,6 +8,8 @@ Early development. The current build is a tray-resident WPF palette that does no
 
 Use the `X` button on the palette to hide it. Use the tray icon menu to show or hide the palette, open Prompt Library, open settings, reload prompt JSON, or exit Promplet.
 
+Promplet allows only one running instance. Starting it again while it is already running exits the second process before creating another tray icon or hotkey registration.
+
 Prompt data and app settings are stored at `%APPDATA%\Promplet\prompts.json`. If the file is missing, Promplet creates it from the default prompts. If it is invalid, Promplet backs it up and recreates defaults.
 
 Default hotkeys:
