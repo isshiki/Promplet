@@ -31,13 +31,15 @@ public partial class MainWindow : Window
         _promptDocument = _promptStore.LoadOrCreate();
         _paletteViewModel = new PaletteViewModel(_promptDocument);
 
+        AppearanceService.Apply(_promptDocument.App.ThemeMode);
         InitializeComponent();
         NonActivatingWindowBehavior.Attach(this);
         DataContext = _paletteViewModel;
+        ApplyAppearanceSettings();
         ApplySavedWindowState(_promptDocument.Window);
         DragHandle.MouseLeftButtonDown += DragHandle_MouseLeftButtonDown;
-        _trayIconService = new TrayIconService(GetTrayIconPath(), ShowPalette, HidePalette, ReloadPrompts, ExitApplication);
-        _globalHotKeyService = new GlobalHotKeyService(this);
+        _trayIconService = new TrayIconService(GetTrayIconPath(), ShowPalette, HidePalette, OpenSettings, ReloadPrompts, ExitApplication);
+        _globalHotKeyService = new GlobalHotKeyService(this, GlobalHotKeyDefinitions.Create(_promptDocument.App.HotKeys));
         _globalHotKeyService.HotKeyPressed += GlobalHotKeyService_HotKeyPressed;
         Closing += MainWindow_Closing;
         Closed += (_, _) =>
@@ -175,11 +177,36 @@ public partial class MainWindow : Window
         {
             _promptDocument = _promptStore.LoadOrCreate();
             _paletteViewModel.LoadDocument(_promptDocument);
+            ApplyAppearanceSettings();
+            _globalHotKeyService.ApplyHotKeys(GlobalHotKeyDefinitions.Create(_promptDocument.App.HotKeys));
         }
         catch
         {
             SystemSounds.Beep.Play();
         }
+    }
+
+    private void OpenSettings()
+    {
+        var dialog = new SettingsWindow(_promptDocument.App, _globalHotKeyService.RegistrationResults)
+        {
+            Topmost = true
+        };
+
+        if (IsVisible)
+        {
+            dialog.Owner = this;
+        }
+
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        _promptDocument.App = dialog.Settings;
+        _promptStore.Save(_promptDocument);
+        ApplyAppearanceSettings();
+        _globalHotKeyService.ApplyHotKeys(GlobalHotKeyDefinitions.Create(_promptDocument.App.HotKeys));
     }
 
     private void ExitApplication()
@@ -212,6 +239,12 @@ public partial class MainWindow : Window
         {
             WindowStartupLocation = WindowStartupLocation.CenterScreen;
         }
+    }
+
+    private void ApplyAppearanceSettings()
+    {
+        AppearanceService.Apply(_promptDocument.App.ThemeMode);
+        Opacity = _promptDocument.App.Opacity;
     }
 
     private void SaveWindowState()

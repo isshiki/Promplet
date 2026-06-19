@@ -22,12 +22,15 @@ Included hotkeys:
 - `Ctrl + Shift + NumPad9`: paste visible button 9.
 - `Ctrl + Shift + NumPad0`: paste visible button 10.
 
-Out of scope:
+Later implemented in the settings dialog pass:
 
 - User-editable hotkey settings.
+- Hotkey conflict status display.
+
+Still out of scope:
+
 - Left/right modifier key distinction.
 - Low-level keyboard hooks.
-- Hotkey conflict UI.
 
 ## Design Notes
 
@@ -37,7 +40,7 @@ Use `VK_NUMPAD0` to `VK_NUMPAD9` so numpad keys are distinct from the top-row nu
 
 Add `MOD_NOREPEAT` to reduce repeated paste while a hotkey is held down.
 
-If a hotkey cannot be registered because another app already owns it, Promplet keeps running and simply ignores that hotkey. A future settings UI can expose conflict state and allow editing.
+If a hotkey cannot be registered because another app already owns it, Promplet keeps running and marks that hotkey as failed in the settings dialog. The user can then change the shortcut and save it.
 
 ## Runtime Behavior
 

@@ -25,6 +25,7 @@ internal static class Program
         {
             ("default catalog contains four MVP prompts in order", PromptCatalogContainsExpectedButtons),
             ("prompt store creates the default JSON file", PromptStoreCreatesDefaultJsonFile),
+            ("prompt store normalizes appearance and hotkey settings", PromptStoreNormalizesAppearanceAndHotKeySettings),
             ("prompt store backs up invalid JSON and recreates defaults", PromptStoreBacksUpInvalidJson),
             ("prompt store backs up invalid JSON shape and recreates defaults", PromptStoreBacksUpInvalidJsonShape),
             ("palette view model switches visible prompt groups", PaletteViewModelSwitchesVisiblePromptGroups),
@@ -34,6 +35,9 @@ internal static class Program
             ("project uses Promplet icon and Windows Forms tray support", ProjectUsesIconAndWindowsForms),
             ("tray service exposes resident app commands", TrayServiceExposesResidentAppCommands),
             ("global hotkey definitions match the approved shortcuts", GlobalHotKeyDefinitionsMatchApprovedShortcuts),
+            ("global hotkey definitions can be built from user settings", GlobalHotKeyDefinitionsCanUseUserSettings),
+            ("global hotkey service records registration failures", GlobalHotKeyServiceRecordsRegistrationFailures),
+            ("settings dialog exposes appearance and hotkey controls", SettingsDialogExposesAppearanceAndHotkeyControls),
             ("global hotkey service exposes Win32 registration contract", GlobalHotKeyServiceExposesWin32RegistrationContract),
             ("main window wires global hotkey actions", MainWindowWiresGlobalHotKeyActions),
             ("SendInput uses the native Windows INPUT struct size", SendInputStructUsesNativeSize),
@@ -96,6 +100,50 @@ internal static class Program
         AssertEqual(4, document.Groups[0].Buttons.Count, "default button count");
         AssertEqual("summarize", document.Groups[0].Buttons[0].Id, "default first button id");
         AssertEqual("要約", document.Groups[0].Buttons[0].Label, "default first button label");
+    }
+
+    private static void PromptStoreNormalizesAppearanceAndHotKeySettings()
+    {
+        using var temp = TemporaryDirectory.Create();
+        var document = PromptCatalog.CreateDefaultDocument();
+        document.App.ThemeMode = "unknown";
+        document.App.Opacity = 2;
+        document.App.HotKeys.TogglePalette = new HotKeyGesture
+        {
+            Control = false,
+            Alt = false,
+            Shift = false,
+            Windows = false,
+            Key = "Missing"
+        };
+        document.App.HotKeys.PasteButtons =
+        [
+            new HotKeyGesture
+            {
+                Enabled = true,
+                Control = true,
+                Shift = true,
+                Key = "F7"
+            },
+            new HotKeyGesture
+            {
+                Enabled = false,
+                Key = "Missing"
+            }
+        ];
+
+        var store = new PromptStore(temp.Path);
+        store.Save(document);
+        var reloaded = store.LoadOrCreate();
+
+        AssertEqual("System", reloaded.App.ThemeMode, "invalid theme should normalize to System");
+        AssertEqual(1d, reloaded.App.Opacity, "opacity should clamp to full opacity");
+        AssertEqual("Space", reloaded.App.HotKeys.TogglePalette.Key, "invalid toggle key should reset");
+        AssertTrue(reloaded.App.HotKeys.TogglePalette.Control, "default toggle should use Ctrl");
+        AssertEqual(10, reloaded.App.HotKeys.PasteButtons.Count, "paste hotkey count");
+        AssertEqual("F7", reloaded.App.HotKeys.PasteButtons[0].Key, "valid custom paste key should remain");
+        AssertTrue(!reloaded.App.HotKeys.PasteButtons[1].Enabled, "disabled paste hotkey should stay disabled");
+        AssertEqual("NumPad2", reloaded.App.HotKeys.PasteButtons[1].Key, "disabled invalid paste hotkey should keep the default key");
     }
 
     private static void PromptStoreBacksUpInvalidJson()
@@ -314,6 +362,7 @@ internal static class Program
 
         AssertTrue(source.Contains("Show Promplet", StringComparison.Ordinal), "tray menu should show the palette");
         AssertTrue(source.Contains("Hide Promplet", StringComparison.Ordinal), "tray menu should hide the palette");
+        AssertTrue(source.Contains("Settings...", StringComparison.Ordinal), "tray menu should open settings");
         AssertTrue(source.Contains("Reload prompts", StringComparison.Ordinal), "tray menu should reload JSON prompts");
         AssertTrue(source.Contains("Exit", StringComparison.Ordinal), "tray menu should explicitly exit");
         AssertTrue(source.Contains("Dispose()", StringComparison.Ordinal), "tray icon should be disposable");
@@ -354,6 +403,65 @@ internal static class Program
         }
     }
 
+    private static void GlobalHotKeyDefinitionsCanUseUserSettings()
+    {
+        var settings = HotKeySettings.CreateDefault();
+        settings.TogglePalette = new HotKeyGesture
+        {
+            Enabled = true,
+            Control = true,
+            Alt = false,
+            Shift = true,
+            Key = "F8"
+        };
+        settings.PasteButtons[0] = new HotKeyGesture
+        {
+            Enabled = true,
+            Control = true,
+            Alt = true,
+            Shift = false,
+            Key = "D1"
+        };
+        settings.PasteButtons[1].Enabled = false;
+
+        var hotkeys = GlobalHotKeyDefinitions.Create(settings).ToList();
+
+        var toggle = hotkeys.Single(hotkey => hotkey.Action.Kind == GlobalHotKeyActionKind.TogglePalette);
+        AssertEqual("Ctrl+Shift+F8", toggle.DisplayText, "custom toggle display text");
+        AssertEqual(GlobalHotKeyVirtualKeys.F8, toggle.VirtualKey, "custom toggle virtual key");
+
+        var firstPaste = hotkeys.Single(hotkey =>
+            hotkey.Action.Kind == GlobalHotKeyActionKind.PasteVisibleButton
+            && hotkey.Action.VisibleButtonIndex == 0);
+        AssertEqual(0, firstPaste.Action.VisibleButtonIndex, "disabled paste hotkey should be skipped");
+        AssertEqual("Ctrl+Alt+1", firstPaste.DisplayText, "custom paste display text");
+        AssertEqual(GlobalHotKeyVirtualKeys.D1, firstPaste.VirtualKey, "custom paste virtual key");
+    }
+
+    private static void GlobalHotKeyServiceRecordsRegistrationFailures()
+    {
+        var serviceSource = File.ReadAllText(FindRepositoryFile("Promplet", "Services", "GlobalHotKeyService.cs"), Encoding.UTF8);
+
+        AssertTrue(serviceSource.Contains("RegistrationResults", StringComparison.Ordinal), "GlobalHotKeyService should expose registration results");
+        AssertTrue(serviceSource.Contains("Marshal.GetLastWin32Error()", StringComparison.Ordinal), "GlobalHotKeyService should record RegisterHotKey failure codes");
+        AssertTrue(serviceSource.Contains("ApplyHotKeys", StringComparison.Ordinal), "GlobalHotKeyService should support applying edited hotkeys");
+    }
+
+    private static void SettingsDialogExposesAppearanceAndHotkeyControls()
+    {
+        var xaml = XDocument.Load(FindRepositoryFile("Promplet", "SettingsWindow.xaml"));
+        var source = File.ReadAllText(FindRepositoryFile("Promplet", "SettingsWindow.xaml.cs"), Encoding.UTF8);
+        XNamespace wpf = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+        XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
+
+        AssertTrue(xaml.Descendants(wpf + "ComboBox").Any(element => AttributeValueOrDefault(element, x + "Name") == "ThemeModeComboBox"), "settings dialog should expose theme mode");
+        AssertTrue(xaml.Descendants(wpf + "Slider").Any(element => AttributeValueOrDefault(element, x + "Name") == "OpacitySlider"), "settings dialog should expose opacity");
+        AssertTrue(xaml.Descendants(wpf + "StackPanel").Any(element => AttributeValueOrDefault(element, x + "Name") == "HotKeyRowsPanel"), "settings dialog should expose hotkey rows");
+        AssertTrue(source.Contains("ResetToDefaults", StringComparison.Ordinal), "settings dialog should reset settings");
+        AssertTrue(source.Contains("DialogResult = true", StringComparison.Ordinal), "settings dialog should save with OK");
+        AssertTrue(source.Contains("DialogResult = false", StringComparison.Ordinal), "settings dialog should cancel changes");
+    }
+
     private static void GlobalHotKeyServiceExposesWin32RegistrationContract()
     {
         var nativeSource = File.ReadAllText(FindRepositoryFile("Promplet", "Win32", "NativeMethods.cs"), Encoding.UTF8);
@@ -366,7 +474,7 @@ internal static class Program
         AssertTrue(serviceSource.Contains("UnregisterHotKey", StringComparison.Ordinal), "GlobalHotKeyService should unregister hotkeys");
         AssertTrue(serviceSource.Contains("WM_HOTKEY", StringComparison.Ordinal), "GlobalHotKeyService should handle WM_HOTKEY");
         AssertTrue(serviceSource.Contains("HotKeyPressed", StringComparison.Ordinal), "GlobalHotKeyService should expose hotkey events");
-        AssertTrue(serviceSource.Contains("GlobalHotKeyDefinitions.CreateDefault()", StringComparison.Ordinal), "GlobalHotKeyService should use default hotkey definitions");
+        AssertTrue(serviceSource.Contains("ApplyHotKeys", StringComparison.Ordinal), "GlobalHotKeyService should support updated hotkey definitions");
     }
 
     private static void MainWindowWiresGlobalHotKeyActions()

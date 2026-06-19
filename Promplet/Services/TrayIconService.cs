@@ -14,6 +14,7 @@ public sealed class TrayIconService : IDisposable
         string iconPath,
         Action showPalette,
         Action hidePalette,
+        Action openSettings,
         Action reloadPrompts,
         Action exitApplication)
     {
@@ -21,6 +22,7 @@ public sealed class TrayIconService : IDisposable
         _contextMenu = new Forms.ContextMenuStrip();
         _contextMenu.Items.Add("Show Promplet", null, (_, _) => showPalette());
         _contextMenu.Items.Add("Hide Promplet", null, (_, _) => hidePalette());
+        _contextMenu.Items.Add("Settings...", null, (_, _) => openSettings());
         _contextMenu.Items.Add("Reload prompts", null, (_, _) => reloadPrompts());
         _contextMenu.Items.Add(new Forms.ToolStripSeparator());
         _contextMenu.Items.Add("Exit", null, (_, _) => exitApplication());

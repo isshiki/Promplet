@@ -14,6 +14,31 @@ public sealed class PromptAppSettings
     public bool RestoreClipboard { get; set; } = true;
 
     public string SelectedGroupId { get; set; } = "ai-chat";
+
+    public string ThemeMode { get; set; } = PromptThemeModes.System;
+
+    public double Opacity { get; set; } = 1;
+
+    public HotKeySettings HotKeys { get; set; } = HotKeySettings.CreateDefault();
+
+    public PromptAppSettings Clone()
+    {
+        return new PromptAppSettings
+        {
+            RestoreClipboard = RestoreClipboard,
+            SelectedGroupId = SelectedGroupId,
+            ThemeMode = ThemeMode,
+            Opacity = Opacity,
+            HotKeys = HotKeys.Clone()
+        };
+    }
+
+    public void ResetConfigurableSettings()
+    {
+        ThemeMode = PromptThemeModes.System;
+        Opacity = 1;
+        HotKeys = HotKeySettings.CreateDefault();
+    }
 }
 
 public sealed class PromptWindowState

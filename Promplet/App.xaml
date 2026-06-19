@@ -4,6 +4,27 @@
              xmlns:local="clr-namespace:Promplet"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+        <SolidColorBrush x:Key="PrompletPaletteOuterBackgroundBrush" Color="#F6F7F9" />
+        <SolidColorBrush x:Key="PrompletPaletteOuterBorderBrush" Color="#D8DEE6" />
+        <SolidColorBrush x:Key="PrompletSurfaceBackgroundBrush" Color="#FBFCFD" />
+        <SolidColorBrush x:Key="PrompletSurfaceBorderBrush" Color="#D9DFE7" />
+        <SolidColorBrush x:Key="PrompletHeaderBackgroundBrush" Color="#F1F3F6" />
+        <SolidColorBrush x:Key="PrompletHeaderBorderBrush" Color="#E1E5EB" />
+        <SolidColorBrush x:Key="PrompletChromeForegroundBrush" Color="#A5ADBA" />
+        <SolidColorBrush x:Key="PrompletChromeMutedBrush" Color="#A7AFBB" />
+        <SolidColorBrush x:Key="PrompletTabForegroundBrush" Color="#778191" />
+        <SolidColorBrush x:Key="PrompletTabHoverForegroundBrush" Color="#374151" />
+        <SolidColorBrush x:Key="PrompletTabSelectedBackgroundBrush" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="PrompletTextPrimaryBrush" Color="#1F2937" />
+        <SolidColorBrush x:Key="PrompletTextSecondaryBrush" Color="#8F9AA8" />
+        <SolidColorBrush x:Key="PrompletPromptButtonBackgroundBrush" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="PrompletPromptButtonBorderBrush" Color="#E2E8F0" />
+        <SolidColorBrush x:Key="PrompletPromptButtonHoverBackgroundBrush" Color="#F8FAFC" />
+        <SolidColorBrush x:Key="PrompletPromptButtonHoverBorderBrush" Color="#D7DEE8" />
+        <SolidColorBrush x:Key="PrompletPromptButtonPressedBackgroundBrush" Color="#EEF2F7" />
+        <SolidColorBrush x:Key="PrompletDialogBackgroundBrush" Color="#FBFCFD" />
+        <SolidColorBrush x:Key="PrompletDialogPanelBackgroundBrush" Color="#F6F7F9" />
+        <SolidColorBrush x:Key="PrompletDialogInputBackgroundBrush" Color="#FFFFFF" />
+        <SolidColorBrush x:Key="PrompletAccentBrush" Color="#2AA8D6" />
     </Application.Resources>
 </Application>

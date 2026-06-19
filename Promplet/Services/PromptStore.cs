@@ -116,7 +116,10 @@ public sealed class PromptStore
             App = new PromptAppSettings
             {
                 RestoreClipboard = document.App.RestoreClipboard,
-                SelectedGroupId = selectedGroupId
+                SelectedGroupId = selectedGroupId,
+                ThemeMode = NormalizeThemeMode(document.App.ThemeMode),
+                Opacity = NormalizeOpacity(document.App.Opacity),
+                HotKeys = NormalizeHotKeys(document.App.HotKeys)
             },
             Window = new PromptWindowState
             {
@@ -126,6 +129,79 @@ public sealed class PromptStore
             },
             Groups = groups
         };
+    }
+
+    private static string NormalizeThemeMode(string? themeMode)
+    {
+        return PromptThemeModes.IsSupported(themeMode)
+            ? themeMode!
+            : PromptThemeModes.System;
+    }
+
+    private static double NormalizeOpacity(double opacity)
+    {
+        return double.IsFinite(opacity)
+            ? Math.Clamp(opacity, 0.35d, 1d)
+            : 1d;
+    }
+
+    private static HotKeySettings NormalizeHotKeys(HotKeySettings? settings)
+    {
+        var defaults = HotKeySettings.CreateDefault();
+
+        if (settings is null)
+        {
+            return defaults;
+        }
+
+        return new HotKeySettings
+        {
+            TogglePalette = NormalizeGesture(settings.TogglePalette, defaults.TogglePalette),
+            PasteButtons = Enumerable.Range(0, PromptStore.MaximumButtonsPerGroup)
+                .Select(index =>
+                {
+                    var fallback = defaults.PasteButtons[index];
+                    return settings.PasteButtons is not null && index < settings.PasteButtons.Count
+                        ? NormalizeGesture(settings.PasteButtons[index], fallback)
+                        : fallback;
+                })
+                .ToList()
+        };
+    }
+
+    private static HotKeyGesture NormalizeGesture(HotKeyGesture? gesture, HotKeyGesture fallback)
+    {
+        if (gesture is null)
+        {
+            return fallback.Clone();
+        }
+
+        if (!gesture.Enabled)
+        {
+            var disabled = fallback.Clone();
+            disabled.Enabled = false;
+            return disabled;
+        }
+
+        if (!GlobalHotKeyDefinitions.IsSupportedKey(gesture.Key) || !HasAnyModifier(gesture))
+        {
+            return fallback.Clone();
+        }
+
+        return new HotKeyGesture
+        {
+            Enabled = gesture.Enabled,
+            Control = gesture.Control,
+            Alt = gesture.Alt,
+            Shift = gesture.Shift,
+            Windows = gesture.Windows,
+            Key = GlobalHotKeyDefinitions.NormalizeKeyName(gesture.Key)
+        };
+    }
+
+    private static bool HasAnyModifier(HotKeyGesture gesture)
+    {
+        return gesture.Control || gesture.Alt || gesture.Shift || gesture.Windows;
     }
 
     private static double NormalizeWidth(double width)
