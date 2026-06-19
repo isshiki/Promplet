@@ -33,6 +33,9 @@ internal static class Program
             ("icon assets are packaged for Windows shell and tray use", IconAssetsArePackaged),
             ("project uses Promplet icon and Windows Forms tray support", ProjectUsesIconAndWindowsForms),
             ("tray service exposes resident app commands", TrayServiceExposesResidentAppCommands),
+            ("global hotkey definitions match the approved shortcuts", GlobalHotKeyDefinitionsMatchApprovedShortcuts),
+            ("global hotkey service exposes Win32 registration contract", GlobalHotKeyServiceExposesWin32RegistrationContract),
+            ("main window wires global hotkey actions", MainWindowWiresGlobalHotKeyActions),
             ("SendInput uses the native Windows INPUT struct size", SendInputStructUsesNativeSize),
             ("main window uses the approved vertical palette contract", MainWindowUsesApprovedVerticalPaletteContract)
         };
@@ -314,6 +317,67 @@ internal static class Program
         AssertTrue(source.Contains("Reload prompts", StringComparison.Ordinal), "tray menu should reload JSON prompts");
         AssertTrue(source.Contains("Exit", StringComparison.Ordinal), "tray menu should explicitly exit");
         AssertTrue(source.Contains("Dispose()", StringComparison.Ordinal), "tray icon should be disposable");
+    }
+
+    private static void GlobalHotKeyDefinitionsMatchApprovedShortcuts()
+    {
+        var hotkeys = GlobalHotKeyDefinitions.CreateDefault().ToList();
+
+        AssertEqual(11, hotkeys.Count, "default hotkey count");
+
+        var toggle = hotkeys.Single(hotkey => hotkey.Action.Kind == GlobalHotKeyActionKind.TogglePalette);
+        AssertEqual("Ctrl+Alt+Space", toggle.DisplayText, "toggle display text");
+        AssertEqual(GlobalHotKeyModifiers.Control | GlobalHotKeyModifiers.Alt | GlobalHotKeyModifiers.NoRepeat, toggle.Modifiers, "toggle modifiers");
+        AssertEqual(GlobalHotKeyVirtualKeys.Space, toggle.VirtualKey, "toggle virtual key");
+
+        var pasteHotkeys = hotkeys.Where(hotkey => hotkey.Action.Kind == GlobalHotKeyActionKind.PasteVisibleButton).ToList();
+        var expectedKeys = new[]
+        {
+            GlobalHotKeyVirtualKeys.NumPad1,
+            GlobalHotKeyVirtualKeys.NumPad2,
+            GlobalHotKeyVirtualKeys.NumPad3,
+            GlobalHotKeyVirtualKeys.NumPad4,
+            GlobalHotKeyVirtualKeys.NumPad5,
+            GlobalHotKeyVirtualKeys.NumPad6,
+            GlobalHotKeyVirtualKeys.NumPad7,
+            GlobalHotKeyVirtualKeys.NumPad8,
+            GlobalHotKeyVirtualKeys.NumPad9,
+            GlobalHotKeyVirtualKeys.NumPad0
+        };
+
+        for (var index = 0; index < expectedKeys.Length; index++)
+        {
+            var hotkey = pasteHotkeys[index];
+            AssertEqual(index, hotkey.Action.VisibleButtonIndex, $"paste hotkey {index + 1} button index");
+            AssertEqual(GlobalHotKeyModifiers.Control | GlobalHotKeyModifiers.Shift | GlobalHotKeyModifiers.NoRepeat, hotkey.Modifiers, $"paste hotkey {index + 1} modifiers");
+            AssertEqual(expectedKeys[index], hotkey.VirtualKey, $"paste hotkey {index + 1} virtual key");
+        }
+    }
+
+    private static void GlobalHotKeyServiceExposesWin32RegistrationContract()
+    {
+        var nativeSource = File.ReadAllText(FindRepositoryFile("Promplet", "Win32", "NativeMethods.cs"), Encoding.UTF8);
+        AssertTrue(nativeSource.Contains("WM_HOTKEY", StringComparison.Ordinal), "NativeMethods should expose WM_HOTKEY");
+        AssertTrue(nativeSource.Contains("RegisterHotKey", StringComparison.Ordinal), "NativeMethods should expose RegisterHotKey");
+        AssertTrue(nativeSource.Contains("UnregisterHotKey", StringComparison.Ordinal), "NativeMethods should expose UnregisterHotKey");
+
+        var serviceSource = File.ReadAllText(FindRepositoryFile("Promplet", "Services", "GlobalHotKeyService.cs"), Encoding.UTF8);
+        AssertTrue(serviceSource.Contains("RegisterHotKey", StringComparison.Ordinal), "GlobalHotKeyService should register hotkeys");
+        AssertTrue(serviceSource.Contains("UnregisterHotKey", StringComparison.Ordinal), "GlobalHotKeyService should unregister hotkeys");
+        AssertTrue(serviceSource.Contains("WM_HOTKEY", StringComparison.Ordinal), "GlobalHotKeyService should handle WM_HOTKEY");
+        AssertTrue(serviceSource.Contains("HotKeyPressed", StringComparison.Ordinal), "GlobalHotKeyService should expose hotkey events");
+        AssertTrue(serviceSource.Contains("GlobalHotKeyDefinitions.CreateDefault()", StringComparison.Ordinal), "GlobalHotKeyService should use default hotkey definitions");
+    }
+
+    private static void MainWindowWiresGlobalHotKeyActions()
+    {
+        var source = File.ReadAllText(FindRepositoryFile("Promplet", "MainWindow.xaml.cs"), Encoding.UTF8);
+
+        AssertTrue(source.Contains("GlobalHotKeyService", StringComparison.Ordinal), "MainWindow should own GlobalHotKeyService");
+        AssertTrue(source.Contains("HotKeyPressed", StringComparison.Ordinal), "MainWindow should subscribe to hotkey events");
+        AssertTrue(source.Contains("TogglePalette", StringComparison.Ordinal), "MainWindow should handle toggle hotkey");
+        AssertTrue(source.Contains("PasteVisibleButtonByIndexAsync", StringComparison.Ordinal), "MainWindow should paste visible buttons by index");
+        AssertTrue(source.Contains("PastePromptAsync", StringComparison.Ordinal), "MainWindow should share prompt paste behavior");
     }
 
     private static void MainWindowUsesApprovedVerticalPaletteContract()

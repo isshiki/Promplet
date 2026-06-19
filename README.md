@@ -4,11 +4,17 @@ Promplet is a small Windows desktop prompt and snippet palette for quickly pasti
 
 ## Status
 
-Early development. The current build is a Phase 3 MVP: a tray-resident WPF palette that does not steal focus and can paste JSON-backed prompt groups into the active application.
+Early development. The current build is a Phase 4 MVP: a tray-resident WPF palette that does not steal focus and can paste JSON-backed prompt groups into the active application.
 
 Use the `X` button on the palette to hide it. Use the tray icon menu to show, hide, reload prompt JSON, or exit Promplet.
 
 Prompt data is stored at `%APPDATA%\Promplet\prompts.json`. If the file is missing, Promplet creates it from the default prompts. If it is invalid, Promplet backs it up and recreates defaults.
+
+Default hotkeys:
+
+- `Ctrl+Alt+Space`: show or hide the palette
+- `Ctrl+Shift+NumPad1` ... `Ctrl+Shift+NumPad9`: paste visible buttons 1-9
+- `Ctrl+Shift+NumPad0`: paste visible button 10
 
 ## Requirements
 

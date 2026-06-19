@@ -369,20 +369,29 @@ Promplet はタスクトレイ常駐型とする。
 
 グローバルホットキーを設定可能にする。
 
-初期候補：
+現在の初期実装：
 
 ```text
 Ctrl + Alt + Space
+Ctrl + Shift + NumPad1
+Ctrl + Shift + NumPad2
+Ctrl + Shift + NumPad3
+Ctrl + Shift + NumPad4
+Ctrl + Shift + NumPad5
+Ctrl + Shift + NumPad6
+Ctrl + Shift + NumPad7
+Ctrl + Shift + NumPad8
+Ctrl + Shift + NumPad9
+Ctrl + Shift + NumPad0
 ```
 
 用途：
 
-* パレット表示／非表示
-* 次のグループへ切り替え
-* 前のグループへ切り替え
-* ボタンマネージャーを開く
+* `Ctrl + Alt + Space`: パレット表示／非表示
+* `Ctrl + Shift + NumPad1`〜`NumPad9`: 現在グループの表示ボタン1〜9を直接貼り付け
+* `Ctrl + Shift + NumPad0`: 現在グループの表示ボタン10を直接貼り付け
 
-初期実装では、表示／非表示だけでよい。
+テンキーは通常の数字キーと区別する。初期実装では `RegisterHotKey` を使うため、左Ctrl／右Ctrlの区別はしない。NumLock ON を前提にする。ホットキーが他アプリと競合して登録できない場合、Prompletは起動を継続し、そのホットキーだけ無効扱いにする。
 
 ## 12. 設定保存
 
@@ -473,7 +482,7 @@ Ctrl + Alt + Space
 目的：
 実用アプリとして常駐できるようにする。
 
-現在の実装では、タスクトレイアイコン、表示／非表示、JSON再読み込み、終了メニュー、閉じる操作で非表示に対応している。グローバルホットキーは未実装。
+現在の実装では、タスクトレイアイコン、表示／非表示、JSON再読み込み、終了メニュー、閉じる操作で非表示、グローバルホットキーに対応している。
 
 実装範囲：
 

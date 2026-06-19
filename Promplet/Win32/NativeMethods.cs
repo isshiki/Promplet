@@ -8,6 +8,7 @@ internal static class NativeMethods
     internal const int WS_EX_NOACTIVATE = 0x08000000;
     internal const int WS_EX_TOOLWINDOW = 0x00000080;
     internal const int WM_MOUSEACTIVATE = 0x0021;
+    internal const int WM_HOTKEY = 0x0312;
     internal const int MA_NOACTIVATE = 3;
     internal const uint SWP_NOSIZE = 0x0001;
     internal const uint SWP_NOMOVE = 0x0002;
@@ -62,6 +63,20 @@ internal static class NativeMethods
         uint inputCount,
         [In] INPUT[] inputs,
         int inputSize);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool RegisterHotKey(
+        IntPtr hWnd,
+        int id,
+        uint fsModifiers,
+        uint virtualKey);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool UnregisterHotKey(
+        IntPtr hWnd,
+        int id);
 
     [StructLayout(LayoutKind.Sequential)]
     internal struct INPUT

@@ -17,6 +17,7 @@ public partial class MainWindow : Window
     private readonly PromptStore _promptStore;
     private readonly PaletteViewModel _paletteViewModel;
     private readonly TrayIconService _trayIconService;
+    private readonly GlobalHotKeyService _globalHotKeyService;
     private bool _isExiting;
 
     public MainWindow()
@@ -36,8 +37,14 @@ public partial class MainWindow : Window
         ApplySavedWindowState(_promptDocument.Window);
         DragHandle.MouseLeftButtonDown += DragHandle_MouseLeftButtonDown;
         _trayIconService = new TrayIconService(GetTrayIconPath(), ShowPalette, HidePalette, ReloadPrompts, ExitApplication);
+        _globalHotKeyService = new GlobalHotKeyService(this);
+        _globalHotKeyService.HotKeyPressed += GlobalHotKeyService_HotKeyPressed;
         Closing += MainWindow_Closing;
-        Closed += (_, _) => _trayIconService.Dispose();
+        Closed += (_, _) =>
+        {
+            _globalHotKeyService.Dispose();
+            _trayIconService.Dispose();
+        };
     }
 
     private void DragHandle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
@@ -55,6 +62,11 @@ public partial class MainWindow : Window
             return;
         }
 
+        await PastePromptAsync(promptButton);
+    }
+
+    private async Task PastePromptAsync(PromptButton promptButton)
+    {
         try
         {
             await _clipboardPasteService.PasteTextAsync(promptButton.Text);
@@ -88,6 +100,19 @@ public partial class MainWindow : Window
         HidePalette();
     }
 
+    private async void GlobalHotKeyService_HotKeyPressed(object? sender, GlobalHotKeyPressedEventArgs e)
+    {
+        switch (e.Action.Kind)
+        {
+            case GlobalHotKeyActionKind.TogglePalette:
+                TogglePalette();
+                break;
+            case GlobalHotKeyActionKind.PasteVisibleButton:
+                await PasteVisibleButtonByIndexAsync(e.Action.VisibleButtonIndex);
+                break;
+        }
+    }
+
     private void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
         if (_isExiting)
@@ -115,10 +140,33 @@ public partial class MainWindow : Window
         Topmost = true;
     }
 
+    private void TogglePalette()
+    {
+        if (IsVisible)
+        {
+            HidePalette();
+        }
+        else
+        {
+            ShowPalette();
+        }
+    }
+
     private void HidePalette()
     {
         SaveWindowState();
         Hide();
+    }
+
+    private async Task PasteVisibleButtonByIndexAsync(int zeroBasedIndex)
+    {
+        if (zeroBasedIndex < 0 || zeroBasedIndex >= _paletteViewModel.VisibleButtons.Count)
+        {
+            SystemSounds.Beep.Play();
+            return;
+        }
+
+        await PastePromptAsync(_paletteViewModel.VisibleButtons[zeroBasedIndex]);
     }
 
     private void ReloadPrompts()
@@ -138,6 +186,7 @@ public partial class MainWindow : Window
     {
         _isExiting = true;
         SaveWindowState();
+        _globalHotKeyService.Dispose();
         _trayIconService.Dispose();
         System.Windows.Application.Current.Shutdown();
     }
