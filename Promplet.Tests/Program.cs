@@ -1,8 +1,10 @@
+using System.Runtime.InteropServices;
 using Promplet.Services;
 
 var tests = new (string Name, Action Body)[]
 {
-    ("default catalog contains four MVP prompts in order", PromptCatalogContainsExpectedButtons)
+    ("default catalog contains four MVP prompts in order", PromptCatalogContainsExpectedButtons),
+    ("SendInput uses the native Windows INPUT struct size", SendInputStructUsesNativeSize)
 };
 
 var failed = 0;
@@ -35,6 +37,15 @@ static void PromptCatalogContainsExpectedButtons()
     AssertEqual("rewrite", buttons[1].Id, "second id");
     AssertEqual("review", buttons[2].Id, "third id");
     AssertEqual("explain", buttons[3].Id, "fourth id");
+}
+
+static void SendInputStructUsesNativeSize()
+{
+    var inputType = Type.GetType("Promplet.Win32.NativeMethods+INPUT, Promplet", throwOnError: true)!;
+    var expectedSize = IntPtr.Size == 8 ? 40 : 28;
+    var actualSize = Marshal.SizeOf(inputType);
+
+    AssertEqual(expectedSize, actualSize, "Win32 INPUT struct size");
 }
 
 static void AssertEqual<T>(T expected, T actual, string context)

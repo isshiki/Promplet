@@ -4,7 +4,9 @@ Promplet is a small Windows desktop prompt and snippet palette for quickly pasti
 
 ## Status
 
-Early development. The current target is the Phase 1 MVP: a topmost WPF palette that does not steal focus and can paste fixed prompts into the active application.
+Early development. The current build is a Phase 1 MVP: a topmost WPF palette that does not steal focus and can paste fixed prompts into the active application.
+
+The app is not tray-resident yet. Use the `X` button on the palette to exit the MVP build.
 
 ## Requirements
 

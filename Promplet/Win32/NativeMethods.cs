@@ -75,6 +75,12 @@ internal static class NativeMethods
     {
         [FieldOffset(0)]
         public KEYBDINPUT keyboardInput;
+
+        [FieldOffset(0)]
+        public MOUSEINPUT mouseInput;
+
+        [FieldOffset(0)]
+        public HARDWAREINPUT hardwareInput;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -85,5 +91,24 @@ internal static class NativeMethods
         public uint flags;
         public uint time;
         public IntPtr extraInfo;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct MOUSEINPUT
+    {
+        public int dx;
+        public int dy;
+        public uint mouseData;
+        public uint flags;
+        public uint time;
+        public IntPtr extraInfo;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    internal struct HARDWAREINPUT
+    {
+        public uint message;
+        public ushort lowParameter;
+        public ushort highParameter;
     }
 }

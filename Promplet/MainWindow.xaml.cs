@@ -16,10 +16,10 @@ public partial class MainWindow : Window
         InitializeComponent();
         NonActivatingWindowBehavior.Attach(this);
         PromptButtons.ItemsSource = PromptCatalog.GetDefaultButtons();
-        PaletteRoot.MouseLeftButtonDown += PaletteRoot_MouseLeftButtonDown;
+        DragHandle.MouseLeftButtonDown += DragHandle_MouseLeftButtonDown;
     }
 
-    private void PaletteRoot_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    private void DragHandle_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
     {
         if (e.ChangedButton == MouseButton.Left && e.ClickCount == 1)
         {
@@ -60,5 +60,10 @@ public partial class MainWindow : Window
         {
             SystemSounds.Beep.Play();
         }
+    }
+
+    private void CloseButton_Click(object sender, RoutedEventArgs e)
+    {
+        Application.Current.Shutdown();
     }
 }

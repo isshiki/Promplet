@@ -24,10 +24,12 @@ The core manual checks are:
 2. Clicking a palette button does not move keyboard focus away from the target app.
 3. The selected prompt text is pasted into ChatGPT, Claude, Notepad, and Windows Terminal.
 4. The palette can be dragged without losing topmost/no-activate behavior.
+5. The `X` button exits the app.
 
 ## MVP Limitations
 
 - Prompt buttons are fixed in code.
 - Only text clipboard restore is attempted.
 - Tray, hotkey, JSON storage, groups, and manager UI are deferred.
+- The current MVP exits from the palette `X` button instead of hiding to a tray icon.
 - Full no-activate paste behavior must be tested manually against target applications.
