@@ -39,9 +39,23 @@ Recommended locations are:
 - A tools folder you already back up or sync
 - A portable apps folder
 
-For the v1.0 single-file publish, `Promplet.exe` is the only file required to run the app on Windows x64. No separate `Assets` folder is needed for the tray icon.
+Use the published exe from:
 
-If you use `dotnet build` instead of `dotnet publish`, the normal build output is not exe-only. In that case, keep the generated `.dll`, `.deps.json`, `.runtimeconfig.json`, and related output files together.
+```text
+artifacts\Promplet-1.0.0-win-x64\Promplet.exe
+```
+
+That published exe is the self-contained Windows x64 build. It is the only file required to run the app, and no separate `.dll`, `.json`, runtime, or `Assets` folder is needed.
+
+Do not use this file as an exe-only portable app:
+
+```text
+Promplet\bin\Release\net10.0-windows\Promplet.exe
+```
+
+That is the normal framework-dependent build output. It is a small launcher and must stay together with the generated `.dll`, `.deps.json`, `.runtimeconfig.json`, and related files. It also requires the matching .NET Desktop Runtime to be installed.
+
+If you want the easiest manual distribution, zip the entire `artifacts\Promplet-1.0.0-win-x64` folder or copy the single exe inside it.
 
 ## Run and Exit
 
@@ -157,6 +171,8 @@ dotnet publish .\Promplet\Promplet.csproj `
 ```
 
 The publish output should contain `Promplet.exe`.
+
+The published exe is much larger than the normal build exe because it contains the required .NET runtime components. That size difference is expected.
 
 ## Test
 
