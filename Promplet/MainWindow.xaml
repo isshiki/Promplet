@@ -11,10 +11,11 @@
         AllowsTransparency="True"
         Background="Transparent"
         Topmost="True"
-        ShowInTaskbar="False">
+        ShowInTaskbar="False"
+        SizeChanged="MainWindow_SizeChanged">
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome CaptionHeight="0"
-                            ResizeBorderThickness="6"
+                            ResizeBorderThickness="6,0,6,0"
                             CornerRadius="8"
                             GlassFrameThickness="0"
                             UseAeroCaptionButtons="False" />

@@ -606,10 +606,15 @@ internal static class Program
         var root = xaml.Root ?? throw new InvalidOperationException("MainWindow.xaml has no root element.");
         XNamespace wpf = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
         XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
+        XNamespace shell = "clr-namespace:System.Windows.Shell;assembly=PresentationFramework";
 
         AssertEqual("CanResize", AttributeValue(root, "ResizeMode"), "palette resize mode");
         AssertEqual("Height", AttributeValue(root, "SizeToContent"), "palette height sizing");
         AssertTrue(double.Parse(AttributeValue(root, "Width")) >= 600, "palette starts wider than the old compact toolbar");
+        var windowChrome = xaml.Descendants(shell + "WindowChrome")
+            .SingleOrDefault()
+            ?? throw new InvalidOperationException("MainWindow should use WindowChrome for borderless resizing.");
+        AssertEqual("6,0,6,0", AttributeValue(windowChrome, "ResizeBorderThickness"), "palette should only resize horizontally");
 
         var promptButtons = xaml.Descendants(wpf + "ItemsControl")
             .SingleOrDefault(element => AttributeValue(element, x + "Name") == "PromptButtons")
@@ -627,12 +632,14 @@ internal static class Program
             ?? throw new InvalidOperationException("Could not find GroupTabs ItemsControl.");
         AssertEqual("{Binding Groups}", AttributeValue(groupTabs, "ItemsSource"), "group tabs binding");
         AssertTrue(!xaml.Descendants(wpf + "TextBlock").Any(element => StaticGroupNames.Contains(AttributeValueOrDefault(element, "Text"))), "static group tab labels should not remain in XAML");
+        AssertEqual("MainWindow_SizeChanged", AttributeValue(root, "SizeChanged"), "palette should keep height auto-sizing after user resize");
         var closeButton = xaml.Descendants(wpf + "Button")
             .SingleOrDefault(element => AttributeValueOrDefault(element, x + "Name") == "CloseButton")
             ?? throw new InvalidOperationException("Palette should have a close button.");
         AssertEqual("Hide Promplet", AttributeValue(closeButton, "ToolTip"), "close button should hide the palette");
 
         var mainWindowSource = File.ReadAllText(FindRepositoryFile("Promplet", "MainWindow.xaml.cs"), Encoding.UTF8);
+        AssertTrue(mainWindowSource.Contains("System.Windows.SizeToContent.Height", StringComparison.Ordinal), "palette should restore height auto-sizing if WPF clears it during user resize");
         AssertTrue(mainWindowSource.Contains("HidePalette();", StringComparison.Ordinal), "close button should call HidePalette");
         AssertTrue(mainWindowSource.Contains("ExitApplication", StringComparison.Ordinal), "explicit tray exit should remain available");
     }

@@ -57,6 +57,14 @@ public partial class MainWindow : Window
         }
     }
 
+    private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        if (SizeToContent != System.Windows.SizeToContent.Height)
+        {
+            SizeToContent = System.Windows.SizeToContent.Height;
+        }
+    }
+
     private async void PromptButton_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement { DataContext: PromptButton promptButton })
