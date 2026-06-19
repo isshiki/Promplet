@@ -28,5 +28,6 @@ dotnet build .\Promplet.slnx
 2. JSON-backed prompt groups
 3. Tray resident mode
 4. Global hotkey
-5. Paste mode and newline handling options
-6. Button manager UI
+5. Appearance settings: opacity plus system/light/dark theme
+6. Paste mode and newline handling options
+7. Button manager UI
