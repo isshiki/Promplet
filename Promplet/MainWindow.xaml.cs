@@ -1,5 +1,4 @@
 using System.Media;
-using System.IO;
 using System.Windows;
 using System.Windows.Input;
 using System.ComponentModel;
@@ -7,6 +6,7 @@ using Promplet.Models;
 using Promplet.Services;
 using Promplet.ViewModels;
 using Promplet.Win32;
+using Drawing = System.Drawing;
 
 namespace Promplet;
 
@@ -38,7 +38,7 @@ public partial class MainWindow : Window
         ApplyAppearanceSettings();
         ApplySavedWindowState(_promptDocument.Window);
         DragHandle.MouseLeftButtonDown += DragHandle_MouseLeftButtonDown;
-        _trayIconService = new TrayIconService(GetTrayIconPath(), TogglePalette, OpenPromptLibrary, OpenSettings, ReloadPrompts, ExitApplication);
+        _trayIconService = new TrayIconService(CreateTrayIcon(), TogglePalette, OpenPromptLibrary, OpenSettings, ReloadPrompts, ExitApplication);
         _globalHotKeyService = new GlobalHotKeyService(this, GlobalHotKeyDefinitions.Create(_promptDocument.App.HotKeys));
         _globalHotKeyService.HotKeyPressed += GlobalHotKeyService_HotKeyPressed;
         Closing += MainWindow_Closing;
@@ -296,8 +296,18 @@ public partial class MainWindow : Window
         _promptStore.Save(_promptDocument);
     }
 
-    private static string GetTrayIconPath()
+    private static Drawing.Icon CreateTrayIcon()
     {
-        return Path.Combine(AppContext.BaseDirectory, "Assets", "promplet_icon.ico");
+        if (!string.IsNullOrWhiteSpace(Environment.ProcessPath))
+        {
+            var associatedIcon = Drawing.Icon.ExtractAssociatedIcon(Environment.ProcessPath);
+
+            if (associatedIcon is not null)
+            {
+                return associatedIcon;
+            }
+        }
+
+        return new Drawing.Icon(Drawing.SystemIcons.Application, Drawing.SystemIcons.Application.Size);
     }
 }

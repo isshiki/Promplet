@@ -11,14 +11,14 @@ public sealed class TrayIconService : IDisposable
     private bool _disposed;
 
     public TrayIconService(
-        string iconPath,
+        Drawing.Icon icon,
         Action togglePalette,
         Action openPromptLibrary,
         Action openSettings,
         Action reloadPrompts,
         Action exitApplication)
     {
-        _icon = new Drawing.Icon(iconPath);
+        _icon = icon;
         _contextMenu = new Forms.ContextMenuStrip();
         _contextMenu.Items.Add("Show / hide Promplet", null, (_, _) => togglePalette());
         _contextMenu.Items.Add("Prompt Library...", null, (_, _) => openPromptLibrary());

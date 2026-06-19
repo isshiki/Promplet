@@ -37,7 +37,7 @@ internal static class Program
             ("palette view model reloads groups from a new prompt document", PaletteViewModelReloadsPromptDocument),
             ("palette window state clamps saved placement", PaletteWindowStateClampsSavedPlacement),
             ("icon assets are packaged for Windows shell and tray use", IconAssetsArePackaged),
-            ("project uses Promplet icon and Windows Forms tray support", ProjectUsesIconAndWindowsForms),
+            ("project uses v1 release metadata and Windows Forms tray support", ProjectUsesV1MetadataAndWindowsForms),
             ("tray service exposes resident app commands", TrayServiceExposesResidentAppCommands),
             ("global hotkey definitions match the approved shortcuts", GlobalHotKeyDefinitionsMatchApprovedShortcuts),
             ("global hotkey definitions can be built from user settings", GlobalHotKeyDefinitionsCanUseUserSettings),
@@ -435,19 +435,20 @@ internal static class Program
         AssertTrue(BitConverter.ToUInt16(icoBytes, 4) >= 1, "ICO should contain at least one image");
     }
 
-    private static void ProjectUsesIconAndWindowsForms()
+    private static void ProjectUsesV1MetadataAndWindowsForms()
     {
         var project = XDocument.Load(FindRepositoryFile("Promplet", "Promplet.csproj"));
         var properties = project.Root?.Elements("PropertyGroup").Elements().ToDictionary(element => element.Name.LocalName, element => element.Value)
             ?? throw new InvalidOperationException("Promplet.csproj has no properties.");
 
+        AssertEqual("1.0.0", properties["Version"], "package version");
+        AssertEqual("1.0.0.0", properties["AssemblyVersion"], "assembly version");
+        AssertEqual("1.0.0.0", properties["FileVersion"], "file version");
+        AssertEqual("1.0.0", properties["InformationalVersion"], "informational version");
+        AssertEqual("false", properties["IncludeSourceRevisionInInformationalVersion"], "informational version should not include a git hash");
         AssertEqual("true", properties["UseWindowsForms"], "WinForms support for NotifyIcon");
         AssertEqual(@"Assets\promplet_icon.ico", properties["ApplicationIcon"], "application icon path");
-
-        var iconContent = project.Descendants("Content")
-            .SingleOrDefault(element => AttributeValueOrDefault(element, "Include") == @"Assets\promplet_icon.ico")
-            ?? throw new InvalidOperationException("promplet_icon.ico should be copied to the build output for NotifyIcon.");
-        AssertEqual("PreserveNewest", iconContent.Elements("CopyToOutputDirectory").Single().Value, "tray icon copy behavior");
+        AssertTrue(!project.Descendants("Content").Any(element => AttributeValueOrDefault(element, "Include") == @"Assets\promplet_icon.ico"), "tray icon should come from the executable icon, not copied content");
     }
 
     private static void TrayServiceExposesResidentAppCommands()
@@ -455,6 +456,8 @@ internal static class Program
         var source = File.ReadAllText(FindRepositoryFile("Promplet", "Services", "TrayIconService.cs"), Encoding.UTF8);
 
         AssertTrue(source.Contains("Show / hide Promplet", StringComparison.Ordinal), "tray menu should toggle the palette");
+        AssertTrue(source.Contains("Drawing.Icon icon", StringComparison.Ordinal), "tray service should accept an icon object");
+        AssertTrue(!source.Contains("new Drawing.Icon(iconPath)", StringComparison.Ordinal), "tray service should not depend on an external icon file path");
         AssertTrue(!source.Contains("\"Show Promplet\"", StringComparison.Ordinal), "tray menu should not expose separate show");
         AssertTrue(!source.Contains("\"Hide Promplet\"", StringComparison.Ordinal), "tray menu should not expose separate hide");
         AssertTrue(source.Contains("Settings...", StringComparison.Ordinal), "tray menu should open settings");
@@ -615,6 +618,8 @@ internal static class Program
 
         AssertTrue(source.Contains("GlobalHotKeyService", StringComparison.Ordinal), "MainWindow should own GlobalHotKeyService");
         AssertTrue(source.Contains("HotKeyPressed", StringComparison.Ordinal), "MainWindow should subscribe to hotkey events");
+        AssertTrue(source.Contains("CreateTrayIcon()", StringComparison.Ordinal), "MainWindow should create the tray icon from the executable icon");
+        AssertTrue(source.Contains("ExtractAssociatedIcon", StringComparison.Ordinal), "MainWindow should avoid an external tray icon file");
         AssertTrue(source.Contains("OpenPromptLibrary", StringComparison.Ordinal), "MainWindow should open Prompt Library from the tray");
         AssertTrue(source.Contains("TogglePalette", StringComparison.Ordinal), "MainWindow should handle toggle hotkey");
         AssertTrue(source.Contains("PasteVisibleButtonByIndexAsync", StringComparison.Ordinal), "MainWindow should paste visible buttons by index");

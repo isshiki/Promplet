@@ -6,6 +6,7 @@ obj/
 *.userosscache
 *.sln.docstates
 TestResults/
+artifacts/
 .idea/
 .vscode/
 *.log
