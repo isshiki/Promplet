@@ -2,6 +2,7 @@ using System.Media;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Threading;
 using Promplet.Models;
 using Promplet.Services;
 using WpfButton = System.Windows.Controls.Button;
@@ -14,8 +15,10 @@ public partial class SettingsWindow : Window
 {
     private readonly IReadOnlyList<GlobalHotKeyRegistrationResult> _registrationResults;
     private readonly List<HotKeyEditorRow> _hotKeyRows = [];
+    private readonly DispatcherTimer _appearancePreviewTimer;
     private PromptAppSettings _settings;
     private HotKeyEditorRow? _capturingRow;
+    private bool _isApplyingControls;
 
     public SettingsWindow(
         PromptAppSettings settings,
@@ -23,6 +26,11 @@ public partial class SettingsWindow : Window
     {
         _settings = settings.Clone();
         _registrationResults = registrationResults;
+        _appearancePreviewTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(1)
+        };
+        _appearancePreviewTimer.Tick += AppearancePreviewTimer_Tick;
 
         InitializeComponent();
         PreviewKeyDown += SettingsWindow_PreviewKeyDown;
@@ -32,20 +40,29 @@ public partial class SettingsWindow : Window
             PromptThemeModes.Light,
             PromptThemeModes.Dark
         };
-        OpacitySlider.ValueChanged += (_, _) => UpdateOpacityText();
+        ThemeModeComboBox.SelectionChanged += (_, _) => ScheduleAppearancePreview();
+        OpacitySlider.ValueChanged += (_, _) =>
+        {
+            UpdateOpacityText();
+            ScheduleAppearancePreview();
+        };
 
         ApplySettingsToControls();
         UpdateRegistrationStatus();
     }
 
+    public event EventHandler<PromptAppSettings>? AppearancePreviewRequested;
+
     public PromptAppSettings Settings => _settings.Clone();
 
     private void ApplySettingsToControls()
     {
+        _isApplyingControls = true;
         ThemeModeComboBox.SelectedItem = _settings.ThemeMode;
         OpacitySlider.Value = _settings.Opacity;
         BuildHotKeyRows();
         UpdateOpacityText();
+        _isApplyingControls = false;
     }
 
     private void BuildHotKeyRows()
@@ -83,6 +100,7 @@ public partial class SettingsWindow : Window
             Text = label,
             VerticalAlignment = VerticalAlignment.Center
         };
+        labelText.SetResourceReference(TextBlock.ForegroundProperty, "PrompletTextPrimaryBrush");
         Grid.SetColumn(labelText, 0);
         grid.Children.Add(labelText);
 
@@ -90,9 +108,9 @@ public partial class SettingsWindow : Window
         {
             Content = "On",
             IsChecked = getGesture().Enabled,
-            Foreground = (System.Windows.Media.Brush)FindResource("PrompletTextPrimaryBrush"),
             VerticalAlignment = VerticalAlignment.Center
         };
+        enabledCheckBox.SetResourceReference(ForegroundProperty, "PrompletTextPrimaryBrush");
         Grid.SetColumn(enabledCheckBox, 1);
         grid.Children.Add(enabledCheckBox);
 
@@ -250,9 +268,35 @@ public partial class SettingsWindow : Window
         _capturingRow = null;
     }
 
+    private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton == MouseButton.Left && e.ClickCount == 1)
+        {
+            DragMove();
+        }
+    }
+
     private void UpdateOpacityText()
     {
         OpacityValueTextBlock.Text = $"{OpacitySlider.Value:P0}";
+    }
+
+    private void ScheduleAppearancePreview()
+    {
+        if (_isApplyingControls)
+        {
+            return;
+        }
+
+        _appearancePreviewTimer.Stop();
+        _appearancePreviewTimer.Start();
+    }
+
+    private void AppearancePreviewTimer_Tick(object? sender, EventArgs e)
+    {
+        _appearancePreviewTimer.Stop();
+        UpdateSettingsFromControls();
+        AppearancePreviewRequested?.Invoke(this, Settings);
     }
 
     private void UpdateRegistrationStatus()
@@ -276,18 +320,26 @@ public partial class SettingsWindow : Window
         _settings.SelectedGroupId = selectedGroupId;
         _settings.RestoreClipboard = restoreClipboard;
         ApplySettingsToControls();
+        ScheduleAppearancePreview();
     }
 
     private void Ok_Click(object sender, RoutedEventArgs e)
     {
-        _settings.ThemeMode = ThemeModeComboBox.SelectedItem as string ?? PromptThemeModes.System;
-        _settings.Opacity = Math.Round(OpacitySlider.Value, 2);
+        _appearancePreviewTimer.Stop();
+        UpdateSettingsFromControls();
         DialogResult = true;
     }
 
     private void Cancel_Click(object sender, RoutedEventArgs e)
     {
+        _appearancePreviewTimer.Stop();
         DialogResult = false;
+    }
+
+    private void UpdateSettingsFromControls()
+    {
+        _settings.ThemeMode = ThemeModeComboBox.SelectedItem as string ?? PromptThemeModes.System;
+        _settings.Opacity = Math.Round(OpacitySlider.Value, 2);
     }
 
     private sealed record HotKeyEditorRow(

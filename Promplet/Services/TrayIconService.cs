@@ -12,16 +12,14 @@ public sealed class TrayIconService : IDisposable
 
     public TrayIconService(
         string iconPath,
-        Action showPalette,
-        Action hidePalette,
+        Action togglePalette,
         Action openSettings,
         Action reloadPrompts,
         Action exitApplication)
     {
         _icon = new Drawing.Icon(iconPath);
         _contextMenu = new Forms.ContextMenuStrip();
-        _contextMenu.Items.Add("Show Promplet", null, (_, _) => showPalette());
-        _contextMenu.Items.Add("Hide Promplet", null, (_, _) => hidePalette());
+        _contextMenu.Items.Add("Show / hide Promplet", null, (_, _) => togglePalette());
         _contextMenu.Items.Add("Settings...", null, (_, _) => openSettings());
         _contextMenu.Items.Add("Reload prompts", null, (_, _) => reloadPrompts());
         _contextMenu.Items.Add(new Forms.ToolStripSeparator());
@@ -34,7 +32,7 @@ public sealed class TrayIconService : IDisposable
             Text = "Promplet",
             Visible = true
         };
-        _notifyIcon.DoubleClick += (_, _) => showPalette();
+        _notifyIcon.DoubleClick += (_, _) => togglePalette();
     }
 
     public void Dispose()

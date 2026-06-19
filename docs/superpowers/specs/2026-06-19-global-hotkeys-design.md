@@ -11,16 +11,16 @@ This pass adds global hotkeys for showing/hiding the palette and directly pastin
 Included hotkeys:
 
 - `Ctrl + Alt + Space`: show/hide the palette.
-- `Ctrl + Shift + NumPad1`: paste visible button 1.
-- `Ctrl + Shift + NumPad2`: paste visible button 2.
-- `Ctrl + Shift + NumPad3`: paste visible button 3.
-- `Ctrl + Shift + NumPad4`: paste visible button 4.
-- `Ctrl + Shift + NumPad5`: paste visible button 5.
-- `Ctrl + Shift + NumPad6`: paste visible button 6.
-- `Ctrl + Shift + NumPad7`: paste visible button 7.
-- `Ctrl + Shift + NumPad8`: paste visible button 8.
-- `Ctrl + Shift + NumPad9`: paste visible button 9.
-- `Ctrl + Shift + NumPad0`: paste visible button 10.
+- `Ctrl + NumPad1`: paste visible button 1.
+- `Ctrl + NumPad2`: paste visible button 2.
+- `Ctrl + NumPad3`: paste visible button 3.
+- `Ctrl + NumPad4`: paste visible button 4.
+- `Ctrl + NumPad5`: paste visible button 5.
+- `Ctrl + NumPad6`: paste visible button 6.
+- `Ctrl + NumPad7`: paste visible button 7.
+- `Ctrl + NumPad8`: paste visible button 8.
+- `Ctrl + NumPad9`: paste visible button 9.
+- `Ctrl + NumPad0`: paste visible button 10.
 
 Later implemented in the settings dialog pass:
 

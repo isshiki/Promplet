@@ -38,7 +38,7 @@ public partial class MainWindow : Window
         ApplyAppearanceSettings();
         ApplySavedWindowState(_promptDocument.Window);
         DragHandle.MouseLeftButtonDown += DragHandle_MouseLeftButtonDown;
-        _trayIconService = new TrayIconService(GetTrayIconPath(), ShowPalette, HidePalette, OpenSettings, ReloadPrompts, ExitApplication);
+        _trayIconService = new TrayIconService(GetTrayIconPath(), TogglePalette, OpenSettings, ReloadPrompts, ExitApplication);
         _globalHotKeyService = new GlobalHotKeyService(this, GlobalHotKeyDefinitions.Create(_promptDocument.App.HotKeys));
         _globalHotKeyService.HotKeyPressed += GlobalHotKeyService_HotKeyPressed;
         Closing += MainWindow_Closing;
@@ -188,10 +188,12 @@ public partial class MainWindow : Window
 
     private void OpenSettings()
     {
+        var originalSettings = _promptDocument.App.Clone();
         var dialog = new SettingsWindow(_promptDocument.App, _globalHotKeyService.RegistrationResults)
         {
             Topmost = true
         };
+        dialog.AppearancePreviewRequested += SettingsWindow_AppearancePreviewRequested;
 
         if (IsVisible)
         {
@@ -200,13 +202,23 @@ public partial class MainWindow : Window
 
         if (dialog.ShowDialog() != true)
         {
+            _promptDocument.App = originalSettings;
+            ApplyAppearanceSettings();
+            dialog.AppearancePreviewRequested -= SettingsWindow_AppearancePreviewRequested;
             return;
         }
 
+        dialog.AppearancePreviewRequested -= SettingsWindow_AppearancePreviewRequested;
         _promptDocument.App = dialog.Settings;
         _promptStore.Save(_promptDocument);
         ApplyAppearanceSettings();
         _globalHotKeyService.ApplyHotKeys(GlobalHotKeyDefinitions.Create(_promptDocument.App.HotKeys));
+    }
+
+    private void SettingsWindow_AppearancePreviewRequested(object? sender, PromptAppSettings settings)
+    {
+        AppearanceService.Apply(settings.ThemeMode);
+        Opacity = settings.Opacity;
     }
 
     private void ExitApplication()

@@ -373,23 +373,23 @@ Promplet はタスクトレイ常駐型とする。
 
 ```text
 Ctrl + Alt + Space
-Ctrl + Shift + NumPad1
-Ctrl + Shift + NumPad2
-Ctrl + Shift + NumPad3
-Ctrl + Shift + NumPad4
-Ctrl + Shift + NumPad5
-Ctrl + Shift + NumPad6
-Ctrl + Shift + NumPad7
-Ctrl + Shift + NumPad8
-Ctrl + Shift + NumPad9
-Ctrl + Shift + NumPad0
+Ctrl + NumPad1
+Ctrl + NumPad2
+Ctrl + NumPad3
+Ctrl + NumPad4
+Ctrl + NumPad5
+Ctrl + NumPad6
+Ctrl + NumPad7
+Ctrl + NumPad8
+Ctrl + NumPad9
+Ctrl + NumPad0
 ```
 
 用途：
 
 * `Ctrl + Alt + Space`: パレット表示／非表示
-* `Ctrl + Shift + NumPad1`〜`NumPad9`: 現在グループの表示ボタン1〜9を直接貼り付け
-* `Ctrl + Shift + NumPad0`: 現在グループの表示ボタン10を直接貼り付け
+* `Ctrl + NumPad1`〜`NumPad9`: 現在グループの表示ボタン1〜9を直接貼り付け
+* `Ctrl + NumPad0`: 現在グループの表示ボタン10を直接貼り付け
 
 テンキーは通常の数字キーと区別する。初期実装では `RegisterHotKey` を使うため、左Ctrl／右Ctrlの区別はしない。NumLock ON を前提にする。ホットキーが他アプリと競合して登録できない場合、Prompletは起動を継続し、そのホットキーだけ無効扱いにする。
 

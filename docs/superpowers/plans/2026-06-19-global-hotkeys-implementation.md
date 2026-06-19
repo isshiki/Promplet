@@ -25,7 +25,7 @@
 
 ### Task 1: Hotkey Definitions
 
-- [x] Add failing tests that verify the default hotkey map contains `Ctrl+Alt+Space` for toggle and `Ctrl+Shift+NumPad1..0` for visible button slots 1-10.
+- [x] Add failing tests that verify the default hotkey map contains `Ctrl+Alt+Space` for toggle and `Ctrl+NumPad1..0` for visible button slots 1-10.
 - [x] Run `dotnet run --project .\Promplet.Tests\Promplet.Tests.csproj` and confirm the tests fail because hotkey definitions do not exist.
 - [x] Add `GlobalHotKeyDefinitions`, `GlobalHotKeyDefinition`, and `GlobalHotKeyAction`.
 - [x] Run the test command again and confirm the hotkey definition tests pass.

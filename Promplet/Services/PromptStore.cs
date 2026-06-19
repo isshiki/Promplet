@@ -162,11 +162,21 @@ public sealed class PromptStore
                 {
                     var fallback = defaults.PasteButtons[index];
                     return settings.PasteButtons is not null && index < settings.PasteButtons.Count
-                        ? NormalizeGesture(settings.PasteButtons[index], fallback)
+                        ? NormalizePasteGesture(settings.PasteButtons[index], fallback, index)
                         : fallback;
                 })
                 .ToList()
         };
+    }
+
+    private static HotKeyGesture NormalizePasteGesture(HotKeyGesture? gesture, HotKeyGesture fallback, int zeroBasedIndex)
+    {
+        if (gesture is not null && IsLegacyShiftedNumPadDefault(gesture, zeroBasedIndex))
+        {
+            return fallback.Clone();
+        }
+
+        return NormalizeGesture(gesture, fallback);
     }
 
     private static HotKeyGesture NormalizeGesture(HotKeyGesture? gesture, HotKeyGesture fallback)
@@ -202,6 +212,16 @@ public sealed class PromptStore
     private static bool HasAnyModifier(HotKeyGesture gesture)
     {
         return gesture.Control || gesture.Alt || gesture.Shift || gesture.Windows;
+    }
+
+    private static bool IsLegacyShiftedNumPadDefault(HotKeyGesture gesture, int zeroBasedIndex)
+    {
+        return gesture.Enabled
+            && gesture.Control
+            && gesture.Shift
+            && !gesture.Alt
+            && !gesture.Windows
+            && string.Equals(gesture.Key, $"NumPad{(zeroBasedIndex + 1) % 10}", StringComparison.OrdinalIgnoreCase);
     }
 
     private static double NormalizeWidth(double width)

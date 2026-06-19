@@ -78,7 +78,6 @@ public sealed class HotKeyGesture
         {
             Enabled = true,
             Control = true,
-            Shift = true,
             Key = $"NumPad{number}"
         };
     }

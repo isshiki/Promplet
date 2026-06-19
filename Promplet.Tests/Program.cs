@@ -26,6 +26,7 @@ internal static class Program
             ("default catalog contains four MVP prompts in order", PromptCatalogContainsExpectedButtons),
             ("prompt store creates the default JSON file", PromptStoreCreatesDefaultJsonFile),
             ("prompt store normalizes appearance and hotkey settings", PromptStoreNormalizesAppearanceAndHotKeySettings),
+            ("prompt store migrates legacy shifted numpad defaults", PromptStoreMigratesLegacyShiftedNumPadDefaults),
             ("prompt store backs up invalid JSON and recreates defaults", PromptStoreBacksUpInvalidJson),
             ("prompt store backs up invalid JSON shape and recreates defaults", PromptStoreBacksUpInvalidJsonShape),
             ("palette view model switches visible prompt groups", PaletteViewModelSwitchesVisiblePromptGroups),
@@ -144,6 +145,35 @@ internal static class Program
         AssertEqual("F7", reloaded.App.HotKeys.PasteButtons[0].Key, "valid custom paste key should remain");
         AssertTrue(!reloaded.App.HotKeys.PasteButtons[1].Enabled, "disabled paste hotkey should stay disabled");
         AssertEqual("NumPad2", reloaded.App.HotKeys.PasteButtons[1].Key, "disabled invalid paste hotkey should keep the default key");
+    }
+
+    private static void PromptStoreMigratesLegacyShiftedNumPadDefaults()
+    {
+        using var temp = TemporaryDirectory.Create();
+        var document = PromptCatalog.CreateDefaultDocument();
+
+        for (var index = 0; index < document.App.HotKeys.PasteButtons.Count; index++)
+        {
+            document.App.HotKeys.PasteButtons[index] = new HotKeyGesture
+            {
+                Enabled = true,
+                Control = true,
+                Shift = true,
+                Key = $"NumPad{(index + 1) % 10}"
+            };
+        }
+
+        var store = new PromptStore(temp.Path);
+        store.Save(document);
+        var reloaded = store.LoadOrCreate();
+
+        foreach (var gesture in reloaded.App.HotKeys.PasteButtons)
+        {
+            AssertTrue(gesture.Control, "migrated paste hotkey should keep Ctrl");
+            AssertTrue(!gesture.Shift, "migrated paste hotkey should remove Shift");
+            AssertTrue(!gesture.Alt, "migrated paste hotkey should not add Alt");
+            AssertTrue(!gesture.Windows, "migrated paste hotkey should not add Win");
+        }
     }
 
     private static void PromptStoreBacksUpInvalidJson()
@@ -360,8 +390,9 @@ internal static class Program
     {
         var source = File.ReadAllText(FindRepositoryFile("Promplet", "Services", "TrayIconService.cs"), Encoding.UTF8);
 
-        AssertTrue(source.Contains("Show Promplet", StringComparison.Ordinal), "tray menu should show the palette");
-        AssertTrue(source.Contains("Hide Promplet", StringComparison.Ordinal), "tray menu should hide the palette");
+        AssertTrue(source.Contains("Show / hide Promplet", StringComparison.Ordinal), "tray menu should toggle the palette");
+        AssertTrue(!source.Contains("\"Show Promplet\"", StringComparison.Ordinal), "tray menu should not expose separate show");
+        AssertTrue(!source.Contains("\"Hide Promplet\"", StringComparison.Ordinal), "tray menu should not expose separate hide");
         AssertTrue(source.Contains("Settings...", StringComparison.Ordinal), "tray menu should open settings");
         AssertTrue(source.Contains("Reload prompts", StringComparison.Ordinal), "tray menu should reload JSON prompts");
         AssertTrue(source.Contains("Exit", StringComparison.Ordinal), "tray menu should explicitly exit");
@@ -398,7 +429,7 @@ internal static class Program
         {
             var hotkey = pasteHotkeys[index];
             AssertEqual(index, hotkey.Action.VisibleButtonIndex, $"paste hotkey {index + 1} button index");
-            AssertEqual(GlobalHotKeyModifiers.Control | GlobalHotKeyModifiers.Shift | GlobalHotKeyModifiers.NoRepeat, hotkey.Modifiers, $"paste hotkey {index + 1} modifiers");
+        AssertEqual(GlobalHotKeyModifiers.Control | GlobalHotKeyModifiers.NoRepeat, hotkey.Modifiers, $"paste hotkey {index + 1} modifiers");
             AssertEqual(expectedKeys[index], hotkey.VirtualKey, $"paste hotkey {index + 1} virtual key");
         }
     }
@@ -451,12 +482,19 @@ internal static class Program
     {
         var xaml = XDocument.Load(FindRepositoryFile("Promplet", "SettingsWindow.xaml"));
         var source = File.ReadAllText(FindRepositoryFile("Promplet", "SettingsWindow.xaml.cs"), Encoding.UTF8);
+        var xamlSource = File.ReadAllText(FindRepositoryFile("Promplet", "SettingsWindow.xaml"), Encoding.UTF8);
         XNamespace wpf = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
         XNamespace x = "http://schemas.microsoft.com/winfx/2006/xaml";
 
+        AssertEqual("None", AttributeValue(xaml.Root!, "WindowStyle"), "settings dialog should use a themed title bar");
+        AssertTrue(xaml.Descendants(wpf + "Grid").Any(element => AttributeValueOrDefault(element, x + "Name") == "TitleBar"), "settings dialog should expose a custom title bar");
+        AssertTrue(xamlSource.Contains("PART_Popup", StringComparison.Ordinal), "settings combo box should use a themed template");
+        AssertTrue(xamlSource.Contains("PART_Track", StringComparison.Ordinal), "settings slider should use a themed template");
         AssertTrue(xaml.Descendants(wpf + "ComboBox").Any(element => AttributeValueOrDefault(element, x + "Name") == "ThemeModeComboBox"), "settings dialog should expose theme mode");
         AssertTrue(xaml.Descendants(wpf + "Slider").Any(element => AttributeValueOrDefault(element, x + "Name") == "OpacitySlider"), "settings dialog should expose opacity");
         AssertTrue(xaml.Descendants(wpf + "StackPanel").Any(element => AttributeValueOrDefault(element, x + "Name") == "HotKeyRowsPanel"), "settings dialog should expose hotkey rows");
+        AssertTrue(source.Contains("DispatcherTimer", StringComparison.Ordinal), "settings dialog should debounce live appearance previews");
+        AssertTrue(source.Contains("ScheduleAppearancePreview", StringComparison.Ordinal), "settings dialog should preview appearance changes before OK");
         AssertTrue(source.Contains("ResetToDefaults", StringComparison.Ordinal), "settings dialog should reset settings");
         AssertTrue(source.Contains("DialogResult = true", StringComparison.Ordinal), "settings dialog should save with OK");
         AssertTrue(source.Contains("DialogResult = false", StringComparison.Ordinal), "settings dialog should cancel changes");
