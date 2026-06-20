@@ -31,33 +31,27 @@ Settings:
 
 ## Install
 
-There is no installer in v1.0. Put `Promplet.exe` in any folder and run it.
+There is no installer for the current release. Download the release zip, extract it, and run `Promplet.exe`.
 
-Recommended locations are:
+1. Open the [latest release](https://github.com/isshiki/Promplet/releases/latest).
+2. Download `Promplet-v1.0.0-win-x64.zip` from the release assets.
+3. Extract the zip.
+4. Move the extracted folder to a stable location.
+5. Run `Promplet.exe`.
 
-- `%LOCALAPPDATA%\Programs\Promplet\Promplet.exe`
+The `v1.0.0` part of the zip filename changes with each release. For future versions, download the latest `Promplet-vX.Y.Z-win-x64.zip` asset.
+
+Recommended install locations are:
+
+- `%LOCALAPPDATA%\Programs\Promplet`
 - A tools folder you already back up or sync
 - A portable apps folder
 
-Use the published exe from:
+The release zip contains a self-contained Windows x64 build. No separate .NET runtime install is required.
 
-```text
-artifacts\Promplet-1.0.0-win-x64\Promplet.exe
-```
+For normal use, `Promplet.exe` is the only file required to run the app. For redistribution, keep the `LICENSE` file alongside `Promplet.exe`, or distribute the release zip as-is.
 
-That published exe is the self-contained Windows x64 build. It is the only file required to run the app, and no separate `.dll`, `.json`, runtime, or `Assets` folder is needed.
-
-For redistribution, include the `LICENSE` file alongside `Promplet.exe`, or distribute a zip that contains both files.
-
-Do not use this file as an exe-only portable app:
-
-```text
-Promplet\bin\Release\net10.0-windows\Promplet.exe
-```
-
-That is the normal framework-dependent build output. It is a small launcher and must stay together with the generated `.dll`, `.deps.json`, `.runtimeconfig.json`, and related files. It also requires the matching .NET Desktop Runtime to be installed.
-
-If you want the easiest manual distribution, use `artifacts\Promplet-v1.0.0-win-x64.zip`.
+Do not use `Source code (zip)` or `Source code (tar.gz)` from the release page when you only want to run Promplet. Those files are GitHub's automatic source-code archives and do not contain the ready-to-run app.
 
 ## Run and Exit
 
@@ -144,7 +138,9 @@ To reset Promplet to the default prompts and settings:
 2. Delete `%APPDATA%\Promplet\prompts.json`.
 3. Start Promplet again.
 
-## Build
+## Build From Source
+
+Use this section only if you want to build Promplet yourself.
 
 Requirements:
 
@@ -175,6 +171,8 @@ dotnet publish .\Promplet\Promplet.csproj `
 The publish output should contain `Promplet.exe`.
 
 The published exe is much larger than the normal build exe because it contains the required .NET runtime components. That size difference is expected.
+
+The development build output under `Promplet\bin\Release\net10.0-windows` is framework-dependent. It must stay together with the generated `.dll`, `.deps.json`, `.runtimeconfig.json`, and related files, and it requires the matching .NET Desktop Runtime to be installed.
 
 ## Test
 
