@@ -11,3 +11,6 @@ artifacts/
 .vscode/
 *.log
 .superpowers/
+# Local working files and folders. Applies at any depth.
+@*
+@*/
