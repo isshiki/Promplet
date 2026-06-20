@@ -38,6 +38,7 @@ internal static class Program
             ("palette window state clamps saved placement", PaletteWindowStateClampsSavedPlacement),
             ("icon assets are packaged for Windows shell and tray use", IconAssetsArePackaged),
             ("project uses v1 release metadata and Windows Forms tray support", ProjectUsesV1MetadataAndWindowsForms),
+            ("project uses Apache 2 license metadata", ProjectUsesApacheLicenseMetadata),
             ("tray service exposes resident app commands", TrayServiceExposesResidentAppCommands),
             ("global hotkey definitions match the approved shortcuts", GlobalHotKeyDefinitionsMatchApprovedShortcuts),
             ("global hotkey definitions can be built from user settings", GlobalHotKeyDefinitionsCanUseUserSettings),
@@ -449,6 +450,22 @@ internal static class Program
         AssertEqual("true", properties["UseWindowsForms"], "WinForms support for NotifyIcon");
         AssertEqual(@"Assets\promplet_icon.ico", properties["ApplicationIcon"], "application icon path");
         AssertTrue(!project.Descendants("Content").Any(element => AttributeValueOrDefault(element, "Include") == @"Assets\promplet_icon.ico"), "tray icon should come from the executable icon, not copied content");
+    }
+
+    private static void ProjectUsesApacheLicenseMetadata()
+    {
+        var project = XDocument.Load(FindRepositoryFile("Promplet", "Promplet.csproj"));
+        var properties = project.Root?.Elements("PropertyGroup").Elements().ToDictionary(element => element.Name.LocalName, element => element.Value)
+            ?? throw new InvalidOperationException("Promplet.csproj has no properties.");
+        var license = File.ReadAllText(FindRepositoryFile("LICENSE"), Encoding.UTF8);
+        var readme = File.ReadAllText(FindRepositoryFile("README.md"), Encoding.UTF8);
+
+        AssertEqual("Apache-2.0", properties["PackageLicenseExpression"], "package license expression");
+        AssertTrue(license.StartsWith("Apache License", StringComparison.Ordinal), "LICENSE should use Apache License text");
+        AssertTrue(license.Contains("Version 2.0, January 2004", StringComparison.Ordinal), "LICENSE should be Apache 2.0");
+        AssertTrue(license.Contains("Copyright 2026 masa-i", StringComparison.Ordinal), "LICENSE should keep copyright owner");
+        AssertTrue(!license.Contains("MIT License", StringComparison.Ordinal), "LICENSE should not still be MIT");
+        AssertTrue(readme.Contains("Apache License, Version 2.0", StringComparison.Ordinal), "README should mention Apache 2.0");
     }
 
     private static void TrayServiceExposesResidentAppCommands()

@@ -47,6 +47,8 @@ artifacts\Promplet-1.0.0-win-x64\Promplet.exe
 
 That published exe is the self-contained Windows x64 build. It is the only file required to run the app, and no separate `.dll`, `.json`, runtime, or `Assets` folder is needed.
 
+For redistribution, include the `LICENSE` file alongside `Promplet.exe`, or distribute a zip that contains both files.
+
 Do not use this file as an exe-only portable app:
 
 ```text
@@ -55,7 +57,7 @@ Promplet\bin\Release\net10.0-windows\Promplet.exe
 
 That is the normal framework-dependent build output. It is a small launcher and must stay together with the generated `.dll`, `.deps.json`, `.runtimeconfig.json`, and related files. It also requires the matching .NET Desktop Runtime to be installed.
 
-If you want the easiest manual distribution, zip the entire `artifacts\Promplet-1.0.0-win-x64` folder or copy the single exe inside it.
+If you want the easiest manual distribution, use `artifacts\Promplet-v1.0.0-win-x64.zip`.
 
 ## Run and Exit
 
@@ -179,3 +181,7 @@ The published exe is much larger than the normal build exe because it contains t
 ```powershell
 dotnet run --project .\Promplet.Tests\Promplet.Tests.csproj
 ```
+
+## License
+
+Promplet is licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE).
