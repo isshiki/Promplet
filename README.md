@@ -15,6 +15,19 @@ The palette is designed to stay out of the way:
 - The tray icon menu is the main place for settings, Prompt Library, reload, and exit.
 - Only one Promplet instance can run at a time. Starting Promplet again while it is already running exits the second process before it creates another tray icon or hotkey registration.
 
+## Roadmap
+
+Planned work is tracked in the [Promplet Roadmap project](https://github.com/users/isshiki/projects/1) and [GitHub Issues](https://github.com/isshiki/Promplet/issues).
+
+Current roadmap focus:
+
+- v1.1: data safety, backups, import, export, and restore
+- v1.2: Windows startup behavior and operational shortcuts
+- v1.3: diagnostics, logging, and troubleshooting support
+- v1.4: Prompt Library usability improvements
+
+The roadmap is directional and may change as Promplet evolves.
+
 ## Screenshots
 
 Main palette:
